@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 ## Dataset (in PyTorch)
 ## https://pytorch.org/vision/stable/datasets.html#torchvision.datasets.CIFAR10
 
@@ -7,16 +8,16 @@
 #%%
 ## Imports
 
-import torch
-from torch import nn
-from torchvision.datasets import CIFAR10
-from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor, Lambda, Compose
-from torchvision import datasets, utils, transforms
 import matplotlib.pyplot as plt
 import numpy as np
-import network
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms, utils
+from torchvision.datasets import CIFAR10
+from torchvision.transforms import Compose, Lambda, ToTensor
 
+import network
 
 #%%
 ## Hardware acceleration

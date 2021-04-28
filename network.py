@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from torch.nn import \
   Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential
 
