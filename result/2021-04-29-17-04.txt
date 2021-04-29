@@ -1,0 +1,16 @@
+---
+Network:
+Conv(3,16,3) | ReLU |
+Conv(16,24,4) | ReLU | MaxPool(2) |
+Conv(24,56,5) | ReLU | MaxPool(2) |
+Conv(56,112,3) | ReLU |
+Flatten() |
+Linear(448,240) | ReLU |
+Linear(240,120) | ReLU |
+Linear(120, 10)
+---
+
+Epoch: 350
+Learning rate: 0.001
+Result: 68.3% +/- 0.1%
+Running time: 14767s

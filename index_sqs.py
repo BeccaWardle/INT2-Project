@@ -19,6 +19,7 @@ from torchvision.datasets import CIFAR10
 
 ## Utilities
 import network
+import signal
 import datetime
 import time
 import csv
@@ -167,6 +168,17 @@ def test_loop(dataloader, model:nn.Module, loss_fn):
 
     return correct
 
+def save(signal, frame):
+    ## save model state
+    torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
+
+    # atexit doesn't work
+    with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(epoch_accuracy_pair)
+
+
+signal.signal(signal.SIGINT, save)
 
 epochs = 350
 max_accuracy = 0
@@ -188,7 +200,7 @@ for t in range(epochs):
         print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
 
     if consecutive == max_consecutive:
-        print(f"model reached max potential, stopping.")
+        print("model reached max potential, stopping.")
         print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
         print(f"time since start: {time.time() - script_start:>0.2f}s")
         break
@@ -197,9 +209,5 @@ for t in range(epochs):
 
 print("Done!")
 
-## save model state
-torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
+save()
 
-with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerows(epoch_accuracy_pair)
