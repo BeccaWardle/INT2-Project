@@ -175,6 +175,7 @@ for t in range(epochs):
 
     if correct > max_accuracy:
         max_accuracy = correct
+        consecutive = 0 # reset counter
     else:
         print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * correct):>0.2f}%")
         consecutive += 1
@@ -190,6 +191,7 @@ print("Done!")
 ## save model state
 torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
 
+# atexit doesn't work
 with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(epoch_accuracy_pair)
