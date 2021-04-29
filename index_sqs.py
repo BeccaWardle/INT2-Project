@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-# Dataset (in PyTorch)
-# https://pytorch.org/vision/stable/datasets.html#torchvision.datasets.CIFAR10
 
-# Dataset homepage
-# https://www.cs.toronto.edu/~kriz/cifar.html
+# SQS enabled.
 
-# %%
-# Imports
+## Dataset (in PyTorch)
+## https://pytorch.org/vision/stable/datasets.html#torchvision.datasets.CIFAR10
 
-import datetime
-from time import time
-import csv
+## Dataset homepage
+## https://www.cs.toronto.edu/~kriz/cifar.html
+
+#%%
+## Imports
 
 import torch
 from torch import nn
@@ -18,16 +17,25 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
+## Utilities
 import network
+import datetime
+import time
+import csv
+import boto3
 
-script_start = time()
+sqs = boto3.resource('sqs')
+
+# Create the queue. This returns an SQS.Queue instance
+# queue = sqs.create_queue(QueueName='model', Attributes={'DelaySeconds': '120'})
+queue = sqs.get_queue_by_name(QueueName='model.fifo')
+
+script_start = time.time()
 print(f"Started: {datetime.datetime.now()}")
 
-# continue training
+## continue training
 cont = False
 
-# %%
-# Hardware acceleration
 ## accuracy vs epoch recording
 epoch_accuracy_pair = []
 
@@ -37,13 +45,13 @@ epoch_accuracy_pair = []
 torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# normalise the data
+## normalise the data
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-# %%
-# load data (download data from UToronto)
+#%%
+## load data (download data from UToronto)
 training_data = CIFAR10(
     root="data",
     train=True,
@@ -58,8 +66,8 @@ test_data = CIFAR10(
     transform=transform,
 )
 
-# load the dataset, describe the shape
-# %%
+## load the dataset, describe the shape
+#%%
 
 batch_size = 64
 
@@ -72,11 +80,11 @@ test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 for X, y in test_dataloader:
 
     print("Shape of X [n, Channels, Height, Width]: ", X.shape, X.dtype)
-    print("Shape of y: ", y.shape, y.dtype)  # classification
+    print("Shape of y: ", y.shape, y.dtype) # classification
     break
 
-# %%
-# Visualisation
+#%%
+## Visualisation
 
 # train_features, train_labels = next(iter(train_dataloader))
 # print(f"Feature batch shape: {train_features.size()}")
@@ -91,19 +99,19 @@ for X, y in test_dataloader:
 
 network_model = network.Network()
 
-# continue training -> load previous model
-if cont:
+## continue training -> load previous model
+if cont == True:
     print("continuing previous progress.")
     network_model.load_state_dict(torch.load("model.pth"))
     network_model.eval()
 
-network_model.to(device)  # send tensors to CUDA cores
+network_model.to(device) # send tensors to CUDA cores
 print(network_model)
 
 # logits = network_model(train_dataloader)
 # pred_probab = nn.Softmax(dim=1)(logits)
 
-# define hyper-parameters
+## define hyper-parameters
 
 batch_size = 64
 learning_rate = 1e-3
@@ -113,14 +121,13 @@ stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
 
 # training
 
+def train_loop(dataloader, model:nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
 
-def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
-
-    iteration_start = time()
+    iteration_start = time.time()
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
 
-        X, y = X.to(device), y.to(device)  # send data to device
+        X, y = X.to(device), y.to(device) # send data to device
 
         # predict
         pred = model(X)
@@ -138,13 +145,13 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
             print(f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
 
     print()
-    print(f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
+    print(f"time since start: {time.time() - script_start:>0.2f}s, time since iteration start: {time.time() - iteration_start:>0.2f}s \n")
 
 
-def test_loop(dataloader, model: nn.Module, loss_fn):
+def test_loop(dataloader, model:nn.Module, loss_fn):
 
     size = len(dataloader.dataset)
-    test_loss, correct = 0, 0
+    test_loss, correct = 0,0
 
     with torch.no_grad():
         for X, y in dataloader:
@@ -181,18 +188,18 @@ for t in range(epochs):
         print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
 
     if consecutive == max_consecutive:
-        print("model reached max potential, stopping.")
+        print(f"model reached max potential, stopping.")
         print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
-        print(f"time since start: {time() - script_start:>0.2f}s")
+        print(f"time since start: {time.time() - script_start:>0.2f}s")
         break
 
+    response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
+
 print("Done!")
-print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
 ## save model state
 torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
 
-# atexit doesn't work
 with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(epoch_accuracy_pair)
