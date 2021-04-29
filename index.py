@@ -8,16 +8,17 @@
 #%%
 ## Imports
 
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms, utils
+from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from torchvision.transforms import Compose, Lambda, ToTensor
-
 import network
+import datetime
+import time
+
+script_start = time.time()
+print(f"Started: {datetime.datetime.now()}")
 
 ## continue training
 cont = False
@@ -106,6 +107,7 @@ stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
 
 def train_loop(dataloader, model:nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
 
+    iteration_start = time.time()
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
 
@@ -122,9 +124,13 @@ def train_loop(dataloader, model:nn.Module, loss_fn, optimiser: torch.optim.Opti
         loss.backward()
         optimiser.step()
 
-        if batch % 100 == 0:
+        if batch % 50 == 0:
             loss, current = loss.item(), batch * len(X)
-            print(f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
+            print(f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
+
+    print()
+    print(f"time since start: {time.time() - script_start:>0.2f}s, time since iteration start: {time.time() - iteration_start:>0.2f}s \n")
+
 
 def test_loop(dataloader, model:nn.Module, loss_fn):
 
@@ -141,14 +147,31 @@ def test_loop(dataloader, model:nn.Module, loss_fn):
     test_loss /= size
     correct /= size
 
-    print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    print(f"Accuracy: {(100 * correct):>0.2f}%, Avg loss: {test_loss:>8f}\n")
 
-epochs = 250
+    return correct
+
+epochs = 350
+max_accuracy = 0
+consecutive = 0
+max_consecutive = 20
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
-    test_loop(test_dataloader, network_model, cross_entropy_loss)
+    correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
+
+    if correct > max_accuracy:
+        max_accuracy = correct
+    else:
+        consecutive += 1
+
+    if consecutive == max_consecutive:
+        print(f"model reached max potential, stopping.")
+        print(f"max accuracy: {(100 * correct):>0.2f}%")
+        print(f"time since start: {time.time() - script_start:>0.2f}s")
+        break
+
 print("Done!")
 
 ## save model state
