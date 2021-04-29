@@ -10,6 +10,7 @@
 
 import datetime
 from time import time
+import csv
 
 import torch
 from torch import nn
@@ -27,6 +28,11 @@ cont = False
 
 # %%
 # Hardware acceleration
+## accuracy vs epoch recording
+epoch_accuracy_pair = []
+
+#%%
+## Hardware acceleration
 
 torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -158,17 +164,20 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 epochs = 350
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 20
+max_consecutive = 50
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
 
+    epoch_accuracy_pair.append((t, correct))
+
     if correct > max_accuracy:
         max_accuracy = correct
         consecutive = 0 # reset counter
     else:
+        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * correct):>0.2f}%")
         consecutive += 1
 
     if consecutive == max_consecutive:
@@ -179,7 +188,10 @@ for t in range(epochs):
 
 print("Done!")
 
-# save model state
-torch.save(network_model.state_dict(), "model.pth")
+## save model state
+torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
 
 # atexit doesn't work
+with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(epoch_accuracy_pair)
