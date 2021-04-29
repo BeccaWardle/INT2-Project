@@ -12,6 +12,7 @@ import datetime
 import signal
 from time import time
 import csv
+import os
 
 import torch
 from torch import nn
@@ -162,6 +163,19 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct
 
 
+def save(signal, frame):
+    ## save model state
+    torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
+
+    # atexit doesn't work
+    with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(epoch_accuracy_pair)
+
+    os.exit()
+
+signal.signal(signal.SIGINT, save)
+
 epochs = 300
 max_accuracy = 0
 consecutive = 0
@@ -189,14 +203,4 @@ for t in range(epochs):
 
 print("Done!")
 
-def save(signal, frame):
-    ## save model state
-    torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
-
-    # atexit doesn't work
-    with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(epoch_accuracy_pair)
-
 save()
-signal.signal(signal.SIGINT, save)

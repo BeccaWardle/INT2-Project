@@ -24,6 +24,7 @@ import datetime
 import time
 import csv
 import boto3
+import os
 
 sqs = boto3.resource('sqs')
 
@@ -177,6 +178,7 @@ def save(signal, frame):
         writer = csv.writer(f)
         writer.writerows(epoch_accuracy_pair)
 
+    os.exit()
 
 signal.signal(signal.SIGINT, save)
 
@@ -210,4 +212,3 @@ for t in range(epochs):
 print("Done!")
 
 save()
-
