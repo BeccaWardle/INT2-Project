@@ -174,15 +174,15 @@ for t in range(epochs):
     epoch_accuracy_pair.append((t, correct))
 
     if correct > max_accuracy:
-        max_accuracy = correct
         consecutive = 0 # reset counter
+        max_accuracy = correct
     else:
-        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * correct):>0.2f}%")
         consecutive += 1
+        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
 
     if consecutive == max_consecutive:
         print("model reached max potential, stopping.")
-        print(f"max accuracy: {(100 * correct):>0.2f}%")
+        print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
         print(f"time since start: {time() - script_start:>0.2f}s")
         break
 
