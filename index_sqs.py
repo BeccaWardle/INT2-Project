@@ -177,13 +177,14 @@ def save(signal, frame):
         writer = csv.writer(f)
         writer.writerows(epoch_accuracy_pair)
 
+    exit()
 
 signal.signal(signal.SIGINT, save)
 
-epochs = 350
+epochs = 300
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 50
+max_consecutive = 20
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
@@ -210,4 +211,3 @@ for t in range(epochs):
 print("Done!")
 
 save()
-
