@@ -19,6 +19,9 @@ from torchvision.transforms import Compose, Lambda, ToTensor
 
 import network
 
+## continue training
+cont = False
+
 #%%
 ## Hardware acceleration
 
@@ -78,6 +81,13 @@ for X, y in test_dataloader:
 # %%
 
 network_model = network.Network()
+
+## continue training -> load previous model
+if cont == True:
+    print("continuing previous progress.")
+    network_model.load_state_dict(torch.load("model.pth"))
+    network_model.eval()
+
 network_model.to(device) # send tensors to CUDA cores
 print(network_model)
 
@@ -133,12 +143,17 @@ def test_loop(dataloader, model:nn.Module, loss_fn):
 
     print(f"Test Error: \n Accuracy: {(100 * correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
 
+epochs = 250
 
-epochs = 10
 for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
+    print(f"Epoch {t+1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
     test_loop(test_dataloader, network_model, cross_entropy_loss)
 print("Done!")
 
+## save model state
 torch.save(network_model.state_dict(), "model.pth")
+
+# also save state when Ctrl-C
+import atexit
+atexit.register(torch.save, network_model.state_dict(), "model.pth")
