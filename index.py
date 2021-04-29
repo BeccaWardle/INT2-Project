@@ -168,6 +168,7 @@ for t in range(epochs):
 
     if correct > max_accuracy:
         max_accuracy = correct
+        consecutive = 0
     else:
         consecutive += 1
 
@@ -178,6 +179,7 @@ for t in range(epochs):
         break
 
 print("Done!")
+print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
 # save model state
 torch.save(network_model.state_dict(), "model.pth")
