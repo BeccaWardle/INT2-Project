@@ -162,7 +162,7 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct
 
 
-def save(signal, frame):
+def save(signum, frame):
     ## save model state
     torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
 
@@ -170,12 +170,13 @@ def save(signal, frame):
     with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(epoch_accuracy_pair)
+        f.close()
 
     exit()
 
 signal.signal(signal.SIGINT, save)
 
-epochs = 300
+epochs = 250
 max_accuracy = 0
 consecutive = 0
 max_consecutive = 25
@@ -202,4 +203,4 @@ for t in range(epochs):
 
 print("Done!")
 
-save()
+save(0,0)
