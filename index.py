@@ -106,7 +106,7 @@ print(network_model)
 # define hyper-parameters
 
 batch_size = 64
-learning_rate = 1e-3
+learning_rate = 0.05
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
@@ -161,7 +161,7 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct
 
 
-epochs = 350
+epochs = 50
 max_accuracy = 0
 consecutive = 0
 max_consecutive = 50

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from torch.nn import \
-  Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential
+  Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, Dropout2d, BatchNorm2d
 
 class Network(Module):
 
@@ -10,23 +10,32 @@ class Network(Module):
     # self.pool = MaxPool2d(2)  # 2*2 max pooling
 
     self.cnn_relu_stack = Sequential(
-      Conv2d(3, 16, 3),  # 3 in-channel, 16 out-channel, number of kernel
+
+      #32x32x3 --> 32x32x32
+      Conv2d(3, 32, 3, padding = 1), # 3 in-channel, 32 out-channel, number of kernel
+      #32x32x32 --> 30x30x64
+      Conv2d(32, 64, 3),
+      #30x30x64 --> 28x28x64
+      Conv2d(64, 64, 3),
       ReLU(),
-      # MaxPool2d(2),
-      Conv2d(16, 24, 4),
+      #28x28x64 --> 14x14x64
+      MaxPool2d(2, 2), 
+      #14x14x64 --> 12x12x128
+      Conv2d(64, 128, 3),
+      #12x12x128 --> 10x10x128
+      Conv2d(128, 128, 3),
+      #Conv2d(128, 128, 1),
       ReLU(),
-      MaxPool2d(2),
-      Conv2d(24, 56, 5),
-      ReLU(),
-      MaxPool2d(2),
-      Conv2d(56, 112, 3),
+      #10x10x128 --> 5x5x128
+      MaxPool2d(2, 2),
+      Dropout2d(),
       ReLU(),
       Flatten(),
-      Linear(448, 240),
+      Linear(3200, 400),
       ReLU(),
-      Linear(240, 120),
+      Linear(400, 200),
       ReLU(),
-      Linear(120, 10),  # 10 classes, final output
+      Linear(200, 10),  # 10 classes, final output
     )
 
   def forward(self, x):
