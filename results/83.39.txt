@@ -6,6 +6,8 @@ transform = transforms.Compose(
      transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
      
+#increase learning rate
+learning_rate = 2e-2
 ####################################################################################################
 
 #!/usr/bin/env python3
