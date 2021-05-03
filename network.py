@@ -35,19 +35,21 @@ class Network(Module):
       Conv2d(128, 384, 3, 1),
       BatchNorm2d(384),
       ReLU(inplace=True),
-      Conv2d(384, 512, 3, 1),
+      Conv2d(384, 384, 3, 1),
       ReLU(inplace=True),
       MaxPool2d(2, 2),
-      Dropout(p=0.2),
+      Dropout(p=0.25),
+      Conv2d(384, 448, 3, 1),
+      ReLU(inplace=True),
 
       Flatten(),
 
-      Dropout(p=0.1),
-      Linear(8192, 1024),
+      Dropout(p=0.125),
+      Linear(1792, 1024),
       ReLU(inplace=True),
       Linear(1024, 512),
       ReLU(inplace=True),
-      Dropout(p=0.1),
+      Dropout(p=0.2),
       Linear(512, 10),
     )
 
