@@ -11,28 +11,43 @@ class Network(Module):
 
     self.cnn_relu_stack = Sequential(
 
-      # 3 in-channel, 16 out-channel, number of kernel
+      # Conv Layer block 1
+      Conv2d(3, 32, 3, 1),
+      BatchNorm2d(32),
+      ReLU(inplace=True),
+      Conv2d(32, 64, 3, 1),
+      ReLU(inplace=True),
+      MaxPool2d(2, 2),
+      Dropout(p=0.2),
 
-      Conv2d(3, 32, 3, stride=2),ReLU(),# MaxPool2d(2),
-      Conv2d(32, 32, 3), ReLU(),# MaxPool2d(2),
-      BatchNorm2d(32), # re-normalise
+      # Conv Layer block 2
+      Conv2d(64, 128, 3, 1),
+      BatchNorm2d(128),
+      ReLU(inplace=True),
+      Conv2d(128, 128, 3, 1),
+      ReLU(inplace=True),
+      MaxPool2d(2, 2),
+      Dropout2d(p=0.05),
+      # Dropout(p=0.2),
 
-      Conv2d(32, 128, 3), ReLU(), MaxPool2d(2),
-      Conv2d(128, 224, 3), ReLU(),# MaxPool2d(2),
-      Dropout2d(0.1), # regularise by drop-out
-      BatchNorm2d(224),
-
-      Conv2d(224, 896, 3), ReLU(),# MaxPool2d(2),
-      BatchNorm2d(896),
-      Dropout2d(0.2),
+      # Conv Layer block 3
+      Conv2d(128, 256, 3, 1),
+      BatchNorm2d(256),
+      ReLU(inplace=True),
+      Conv2d(256, 256, 3, 1),
+      ReLU(inplace=True),
+      MaxPool2d(2, 2),
+      Dropout(p=0.2),
 
       Flatten(),
 
-      Linear(896, 360),
-      ReLU(),
-      Linear(360, 64),
-      ReLU(),
-      Linear(64, 10),  # 10 classes, final output
+      Dropout(p=0.1),
+      Linear(4096, 1024),
+      ReLU(inplace=True),
+      Linear(1024, 512),
+      ReLU(inplace=True),
+      Dropout(p=0.1),
+      Linear(512, 10),
     )
 
   def forward(self, x):
