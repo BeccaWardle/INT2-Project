@@ -107,7 +107,7 @@ print(network_model)
 # define hyper-parameters
 
 batch_size = 64
-learning_rate = 1e-3
+learning_rate = 1e-2
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)

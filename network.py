@@ -10,27 +10,36 @@ class Network(Module):
     # self.pool = MaxPool2d(2)  # 2*2 max pooling
 
     self.cnn_relu_stack = Sequential(
-      Conv2d(3, 32, (3,3)),  # 3 in-channel, 16 out-channel, number of kernel
-      ReLU(),
-      MaxPool2d(2),
-      Conv2d(32, 128, (3,3)),
-      ReLU(),
-      MaxPool2d(2),
+
+      # 3 in-channel, 16 out-channel, number of kernel
+
+      Conv2d(3, 32, (3, 3)),ReLU(),# MaxPool2d(2),
+
+      Conv2d(32, 128, (3, 3)), ReLU(), MaxPool2d(2),
+
       BatchNorm2d(128),
-      Conv2d(128, 256, (3,3)),
-      ReLU(),
-      # MaxPool2d(2),
-      Dropout2d(0.01),
-      Conv2d(256, 384, (3,3)),
-      ReLU(),
+
+      Conv2d(128, 256, (3, 3)), ReLU(),# MaxPool2d(2),
+
       Dropout2d(0.025),
+
+      Conv2d(256, 384, (3, 3)), ReLU(), MaxPool2d(2),
+
       BatchNorm2d(384),
+
+      Conv2d(384, 448, (3, 3)), ReLU(),# MaxPool2d(2),
+      Conv2d(448, 640, (3, 3)), ReLU(),# MaxPool2d(2),
+
+      Dropout2d(0.1),
+
+      BatchNorm2d(640),
       Flatten(),
-      Linear(1536, 512),
+
+      Linear(640, 360),
       ReLU(),
-      Linear(512, 96),
+      Linear(360, 64),
       ReLU(),
-      Linear(96, 10),  # 10 classes, final output
+      Linear(64, 10),  # 10 classes, final output
     )
 
   def forward(self, x):
