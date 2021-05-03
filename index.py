@@ -19,6 +19,10 @@ cont_fname = "model.pth"
 ## Feature: notification service
 SQS = True
 queue = False
+jit = True
+
+## main code
+
 if SQS is True:
     import boto3
 
@@ -58,7 +62,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # normalise the data
 transform = transforms.Compose(
-    [transforms.ToTensor(),
+    [transforms.Resize((64,64)),
+     transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # %%
@@ -81,8 +86,8 @@ test_data = CIFAR10(
 # %%
 
 
-train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, num_workers=4)
-test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=4)
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
 # image is of 32x32 with 3 channel for colours
 # batch size is 64, but can be modified
@@ -107,6 +112,9 @@ for X, y in test_dataloader:
 # %%
 
 network_model = network.Network()
+
+if jit is True:
+    network_model = torch.jit.script(network_model)
 
 # continue training -> load previous model
 if cont:

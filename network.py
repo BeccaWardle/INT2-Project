@@ -18,12 +18,13 @@ class Network(Module):
       Conv2d(32, 64, 3, 1),
       ReLU(inplace=True),
       MaxPool2d(2, 2),
-      Dropout(p=0.2),
+      Dropout(p=0.15),
 
       # Conv Layer block 2
       Conv2d(64, 128, 3, 1),
       BatchNorm2d(128),
       ReLU(inplace=True),
+      Dropout(p=0.05),
       Conv2d(128, 128, 3, 1),
       ReLU(inplace=True),
       MaxPool2d(2, 2),
@@ -31,10 +32,10 @@ class Network(Module):
       # Dropout(p=0.2),
 
       # Conv Layer block 3
-      Conv2d(128, 256, 3, 1),
-      BatchNorm2d(256),
+      Conv2d(128, 384, 3, 1),
+      BatchNorm2d(384),
       ReLU(inplace=True),
-      Conv2d(256, 256, 3, 1),
+      Conv2d(384, 512, 3, 1),
       ReLU(inplace=True),
       MaxPool2d(2, 2),
       Dropout(p=0.2),
@@ -42,7 +43,7 @@ class Network(Module):
       Flatten(),
 
       Dropout(p=0.1),
-      Linear(4096, 1024),
+      Linear(8192, 1024),
       ReLU(inplace=True),
       Linear(1024, 512),
       ReLU(inplace=True),
