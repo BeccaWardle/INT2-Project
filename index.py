@@ -5,6 +5,28 @@
 # Dataset homepage
 # https://www.cs.toronto.edu/~kriz/cifar.html
 
+# parameters
+
+batch_size = 64
+learning_rate = 1e-2
+epochs = 250
+max_consecutive = 25
+
+## feature: continue training
+cont = False
+cont_fname = "model.pth"
+
+## Feature: notification service
+SQS = True
+queue = False
+if SQS is True:
+    import boto3
+
+    sqs = boto3.resource('sqs')
+
+    # Create the queue. This returns an SQS.Queue instance
+    queue = sqs.get_queue_by_name(QueueName='model.fifo')
+
 # %%
 # Imports
 
@@ -24,16 +46,12 @@ import network
 script_start = time()
 print(f"Started: {datetime.datetime.now()}")
 
-# continue training
-cont = False
-
 # %%
-# Hardware acceleration
-## accuracy vs epoch recording
+## feature: accuracy vs epoch recording (CSV)
 epoch_accuracy_pair = []
 
-#%%
-## Hardware acceleration
+# %%
+## feature: Hardware acceleration
 
 torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -62,7 +80,6 @@ test_data = CIFAR10(
 # load the dataset, describe the shape
 # %%
 
-batch_size = 64
 
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
@@ -71,7 +88,6 @@ test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 # batch size is 64, but can be modified
 
 for X, y in test_dataloader:
-
     print("Shape of X [n, Channels, Height, Width]: ", X.shape, X.dtype)
     print("Shape of y: ", y.shape, y.dtype)  # classification
     break
@@ -95,7 +111,7 @@ network_model = network.Network()
 # continue training -> load previous model
 if cont:
     print("continuing previous progress.")
-    network_model.load_state_dict(torch.load("model.pth"))
+    network_model.load_state_dict(torch.load(cont_fname))
     network_model.eval()
 
 network_model.to(device)  # send tensors to CUDA cores
@@ -106,17 +122,14 @@ print(network_model)
 
 # define hyper-parameters
 
-batch_size = 64
-learning_rate = 1e-2
-
 cross_entropy_loss = nn.CrossEntropyLoss()
 stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
+
 
 # training
 
 
 def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
-
     iteration_start = time()
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
@@ -139,11 +152,11 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
             print(f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
 
     print()
-    print(f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
+    print(
+        f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
 
 
 def test_loop(dataloader, model: nn.Module, loss_fn):
-
     size = len(dataloader.dataset)
     test_loss, correct = 0, 0
 
@@ -174,22 +187,23 @@ def save(signum, frame):
 
     exit()
 
+
 signal.signal(signal.SIGINT, save)
 
-epochs = 250
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 25
+
+## ------ main loop
 
 for t in range(epochs):
-    print(f"Epoch {t+1}/{epochs}\n-------------------------------")
+    print(f"Epoch {t + 1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
 
     epoch_accuracy_pair.append((t, correct))
 
     if correct > max_accuracy:
-        consecutive = 0 # reset counter
+        consecutive = 0  # reset counter
         max_accuracy = correct
     else:
         consecutive += 1
@@ -201,6 +215,9 @@ for t in range(epochs):
         print(f"time since start: {time() - script_start:>0.2f}s")
         break
 
+    if SQS is True and queue:
+        response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
+
 print("Done!")
 
-save(0,0)
+save(0, 0)
