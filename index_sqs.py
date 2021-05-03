@@ -199,12 +199,12 @@ for t in range(epochs):
         max_accuracy = correct
     else:
         consecutive += 1
-        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
+        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%\n")
 
     if consecutive == max_consecutive:
         print("model reached max potential, stopping.")
         print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
-        print(f"time since start: {time.time() - script_start:>0.2f}s")
+        print(f"time since start: {time.time() - script_start:>0.2f}s\n")
         break
 
     response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
