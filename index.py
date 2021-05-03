@@ -8,9 +8,9 @@
 # %%
 # Imports
 
+import csv
 import datetime
 from time import time
-import csv
 
 import torch
 from torch import nn
@@ -190,9 +190,9 @@ print("Done!")
 print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
 ## save model state
-torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
+torch.save(network_model.state_dict(), f"result/model.{int(script_start)}.pth")
 
 # atexit doesn't work
-with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
+with open(f"result/{int(script_start)}.plot.csv", 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(epoch_accuracy_pair)
