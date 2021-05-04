@@ -133,7 +133,7 @@ print(network_model)
 # define hyper-parameters
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-op = torch.optim.Adam(network_model.parameters(), lr=learning_rate) if adam else \
+op = torch.optim.Adam(network_model.parameters()) if adam is True else \
     torch.optim.SGD(network_model.parameters(), lr=learning_rate)
 
 
