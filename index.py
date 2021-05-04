@@ -20,7 +20,7 @@ cont_fname = "model.pth"
 SQS = True
 queue = False
 jit = True
-adam = True
+adam = False
 
 ## main code
 
