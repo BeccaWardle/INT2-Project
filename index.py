@@ -10,7 +10,7 @@
 batch_size = 64
 learning_rate = 1e-2
 epochs = 250
-max_consecutive = 25
+max_consecutive = 30
 
 ## feature: continue training
 cont = False
