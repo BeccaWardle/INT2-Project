@@ -20,6 +20,7 @@ cont_fname = "model.pth"
 SQS = True
 queue = False
 jit = True
+adam = True
 
 ## main code
 
@@ -132,7 +133,8 @@ print(network_model)
 # define hyper-parameters
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
+op = torch.optim.Adam(network_model.parameters(), lr=learning_rate) if adam else \
+    torch.optim.SGD(network_model.parameters(), lr=learning_rate)
 
 
 # training
@@ -206,7 +208,7 @@ consecutive = 0
 
 for t in range(epochs):
     print(f"Epoch {t + 1}/{epochs}\n-------------------------------")
-    train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
+    train_loop(train_dataloader, network_model, cross_entropy_loss, op)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
 
     epoch_accuracy_pair.append((t, correct))
