@@ -44,9 +44,9 @@ class Network(Module):
       Flatten(),
 
       Dropout(p=0.1),
-      Linear(4096, 2048),
+      Linear(4608, 1024),
       ReLU(inplace=True),
-      Linear(2048, 512),
+      Linear(1024, 512),
       ReLU(inplace=True),
       Dropout(p=0.05),
       Linear(512, 10),
