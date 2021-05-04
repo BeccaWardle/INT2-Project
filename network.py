@@ -24,10 +24,10 @@ class Network(Module):
       # Conv Layer block 2
       Conv2d(128, 192, 3, 1),
       BatchNorm2d(192),
-      GELU(inplace=True),
+      GELU(),
       Dropout(p=0.16),
       Conv2d(192, 224, 3, 1),
-      GELU(inplace=True),
+      GELU(),
       MaxPool2d(2, 2),
       Dropout2d(p=0.05),
       # Dropout(p=0.2),
