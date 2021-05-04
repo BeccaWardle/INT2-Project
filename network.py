@@ -1,42 +1,74 @@
 #!/usr/bin/env python3
 from torch.nn import \
-  Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, Dropout2d, BatchNorm2d
+  Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, BatchNorm2d, Dropout, Dropout2d
+
 
 class Network(Module):
-
   def __init__(self):
     super(Network, self).__init__()
 
-    # self.pool = MaxPool2d(2)  # 2*2 max pooling
+    self.conv_layer = Sequential(
 
-    self.cnn_relu_stack = Sequential(
-
+      # Conv Layer block 1
       #32x32x3 --> 32x32x32
-      Conv2d(3, 32, 3, padding = 1), # 3 in-channel, 32 out-channel, number of kernel
-      #32x32x32 --> 30x30x64
-      Conv2d(32, 64, 3),
-      #30x30x64 --> 28x28x64
-      Conv2d(64, 64, 3),
-      ReLU(),
-      #28x28x64 --> 14x14x64
-      MaxPool2d(2, 2), 
-      #14x14x64 --> 12x12x128
-      Conv2d(64, 128, 3),
-      #12x12x128 --> 10x10x128
-      Conv2d(128, 128, 3),
-      #Conv2d(128, 128, 1),
-      ReLU(),
-      #10x10x128 --> 5x5x128
+      Conv2d(3, 32, 3, 1),
+      BatchNorm2d(32),
+      #32x32x32 --> 32x32x64
+      ReLU(inplace=True),
+      Conv2d(32, 64, 3, 1),
+      ReLU(inplace=True),
+      #32x32x64 --> 16x16x64
       MaxPool2d(2, 2),
-      Dropout2d(),
-      ReLU(),
-      Flatten(),
-      Linear(3200, 400),
-      ReLU(),
-      Linear(400, 200),
-      ReLU(),
-      Linear(200, 10),  # 10 classes, final output
+      Dropout(p=0.3),
+
+      # Conv Layer block 2
+      #16x16x64 --> 16x16x128
+      Conv2d(64, 128, 3, 1),
+      BatchNorm2d(128),
+      ReLU(inplace=True),
+      #16x16x128
+      Conv2d(128, 128, 3, 1),
+      ReLU(inplace=True),
+      #8x8x128
+      MaxPool2d(2, 2),
+      Dropout2d(p=0.05),
+      # Dropout(p=0.2),
+
+      # Conv Layer block 3
+      #8x8x128 --> 8x8x256
+      Conv2d(128, 256, 3, 1),
+      BatchNorm2d(256),
+      ReLU(inplace=True),
+      #8x8x256 --> 8x8x256
+      Conv2d(256, 256, 3, 1),
+      ReLU(inplace=True),
+      #4x4x256
+      MaxPool2d(2, 2),
+      Dropout(p=0.3)
     )
 
+
+    self.fc_layer = Sequential(
+      Dropout(p=0.1),
+      Linear(4096, 1024),
+      ReLU(inplace=True),
+      Linear(1024, 512),
+      ReLU(inplace=True),
+      Dropout(p=0.3),
+      Linear(512, 10)
+    )
+
+
   def forward(self, x):
-    return self.cnn_relu_stack(x)
+    """Perform forward."""
+    
+    # conv layers
+    x = self.conv_layer(x)
+    
+    # flatten
+    x = x.view(x.size(0), -1)
+    
+    # fc layer
+    x = self.fc_layer(x)
+
+    return x

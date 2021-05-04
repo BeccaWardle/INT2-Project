@@ -168,7 +168,7 @@ def test_loop(dataloader, model:nn.Module, loss_fn):
     return correct
 
 
-epochs = 350
+epochs = 100
 max_accuracy = 0
 consecutive = 0
 max_consecutive = 50

@@ -39,7 +39,8 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # normalise the data
 transform = transforms.Compose(
-    [transforms.ToTensor(),
+    [transforms.Resize(64),
+    transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # %%
@@ -106,7 +107,7 @@ print(network_model)
 # define hyper-parameters
 
 batch_size = 64
-learning_rate = 0.05
+learning_rate = 0.03
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
