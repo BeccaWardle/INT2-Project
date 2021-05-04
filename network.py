@@ -36,15 +36,15 @@ class Network(Module):
       Conv2d(256, 512, 3, 1),
       BatchNorm2d(512),
       LeakyReLU(inplace=True),
-      Conv2d(512, 512, 3, 1),
+      Conv2d(512, 640, 3, 1),
       LeakyReLU(inplace=True),
       MaxPool2d(3, 2),
-      Dropout2d(p=0.2),
+      Dropout2d(p=0.225),
 
       Flatten(),
 
       Dropout(p=0.1),
-      Linear(8192, 2048),
+      Linear(10240, 2048),
       LeakyReLU(inplace=True),
       Linear(2048, 512),
       LeakyReLU(inplace=True),
