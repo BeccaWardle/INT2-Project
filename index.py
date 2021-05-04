@@ -9,6 +9,7 @@
 
 batch_size = 64
 learning_rate = 1e-2
+momentum = 0.9
 epochs = 250
 max_consecutive = 30
 
@@ -45,6 +46,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
+
 
 import network
 
@@ -134,8 +136,8 @@ print(network_model)
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 op = torch.optim.Adam(network_model.parameters()) if adam is True else \
-    torch.optim.SGD(network_model.parameters(), lr=learning_rate)
-
+    torch.optim.SGD(network_model.parameters(), lr=learning_rate, momentum=momentum)
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min')
 
 # training
 
@@ -210,6 +212,7 @@ for t in range(epochs):
     print(f"Epoch {t + 1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, op)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
+    sched.step()
 
     epoch_accuracy_pair.append((t, correct))
 

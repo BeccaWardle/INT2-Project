@@ -29,22 +29,22 @@ class Network(Module):
       Conv2d(192, 256, 3, 1),
       LeakyReLU(inplace=True),
       MaxPool2d(2, 2),
-      Dropout2d(p=0.1),
+      Dropout2d(p=0.2),
       # Dropout(p=0.2),
 
       # Conv Layer block 3
-      Conv2d(256, 512, 3, 1),
-      BatchNorm2d(512),
+      Conv2d(256, 256, 3, 1),
+      BatchNorm2d(256),
       LeakyReLU(inplace=True),
-      Conv2d(512, 640, 3, 1),
+      Conv2d(256, 384, 3, 1),
       LeakyReLU(inplace=True),
       MaxPool2d(3, 2),
-      Dropout2d(p=0.225),
+      Dropout2d(p=0.2),
 
       Flatten(),
 
       Dropout(p=0.1),
-      Linear(10240, 2048),
+      Linear(6144, 2048),
       LeakyReLU(inplace=True),
       Linear(2048, 512),
       LeakyReLU(inplace=True),
