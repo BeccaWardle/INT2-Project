@@ -3,6 +3,8 @@ from torch.nn import \
   Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, BatchNorm2d, Dropout2d, Dropout, \
   GELU
 
+from torch.nn.functional import gelu
+
 class Network(Module):
 
   def __init__(self):
@@ -54,3 +56,16 @@ class Network(Module):
 
   def forward(self, x):
     return self.cnn_relu_stack(x)
+
+class GELU_modified(Module):
+  """
+  Attempts to combine GELU and ReLU6
+  """
+
+  def __init__(self):
+
+    super(GELU_modified, self).__init__()
+
+  def forward(self,x):
+
+    return min(gelu(x),6)
