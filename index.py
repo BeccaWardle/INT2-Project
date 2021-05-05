@@ -185,7 +185,7 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 
     print(f"Accuracy: {(100 * correct):>0.2f}%, Avg loss: {test_loss:>8f}\n")
 
-    return correct
+    return correct, test_loss
 
 
 def save(signum, frame):
@@ -211,8 +211,8 @@ consecutive = 0
 for t in range(epochs):
     print(f"Epoch {t + 1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, op)
-    correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
-    sched.step()
+    correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
+    sched.step(loss)
 
     epoch_accuracy_pair.append((t, correct))
 
