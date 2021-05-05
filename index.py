@@ -143,6 +143,7 @@ sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min')
 
 
 def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
+    model.train()
     iteration_start = time()
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
@@ -170,6 +171,7 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
 
 
 def test_loop(dataloader, model: nn.Module, loss_fn):
+    model.eval()
     size = len(dataloader.dataset)
     test_loss, correct = 0, 0
 
