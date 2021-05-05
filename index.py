@@ -10,7 +10,6 @@
 
 import datetime
 from time import time
-import csv
 
 import torch
 from torch import nn
@@ -25,11 +24,8 @@ print(f"Started: {datetime.datetime.now()}")
 
 # continue training
 cont = False
+pair = []
 
-# %%
-# Hardware acceleration
-# accuracy vs epoch recording
-epoch_accuracy_pair = []
 
 # %%
 # Hardware acceleration
@@ -80,7 +76,7 @@ for X, y in test_dataloader:
 # %%
 # Visualisation
 
-# train_features, train_labels = next(iter(train_dataloader))
+# train_features , train_labels = next(iter(train_dataloader))
 # print(f"Feature batch shape: {train_features.size()}")
 # print(f"Labels batch shape: {train_labels.size()}")
 # img = train_features[0].squeeze().permute(1,2,0)
@@ -93,7 +89,8 @@ for X, y in test_dataloader:
 # Networks
 
 # network_model = network.Will_Network()
-network_model = network.Lexfee_Network()
+# network_model = network.Lexffe_Network()
+network_model = network.Lexffe_Network_2()
 # network_model = network.Zijun_Network()
 
 # continue training -> load previous model
@@ -115,11 +112,12 @@ batch_size = 64
 learning_rate = 7e-2
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-stochastic_GD = torch.optim.SGD(
-    network_model.parameters(), momentum=0.9, lr=learning_rate)
+stochastic_GD = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
 adamw_GD = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
 
 # training
+epoch_accuracy_pair = []
+failed_write = False
 
 
 def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
@@ -171,17 +169,38 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct
 
 
-epochs = 75
+def save(t, correct):    
+    file_name = f"results/{int(script_start)}-{network_model.name}_{network_model.version}.csv"
+    global failed_write
+    global epoch_accuracy_pair
+    try:
+        with open(file_name, "a") as f:
+            if failed_write:
+                for line in epoch_accuracy_pair:
+                    f.write(f"{line[0]}.{line[1]}\n")
+                failed_write = False
+            else:
+                f.write(f"{t},{correct}\n")
+    except PermissionError:
+        epoch_accuracy_pair.append((t, correct))
+        failed_write = True
+
+
+epochs = 100
 max_accuracy = 0
 consecutive = 0
 max_consecutive = 50
+
+
+
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, adamw_GD)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
+    
+    save(t, correct)
 
-    epoch_accuracy_pair.append((t, correct))
 
     if correct > max_accuracy:
         consecutive = 0  # reset counter
@@ -211,8 +230,3 @@ print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 # save model state
 torch.save(network_model.state_dict(),
            f"results/model.{int(script_start)}.pth")
-
-# atexit doesn't work
-with open(f"results/{int(script_start)}.plot.csv", 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerows(epoch_accuracy_pair)
