@@ -48,7 +48,7 @@ class Network(Module):
       Flatten(),
 
       Dropout(p=0.16),
-      Linear(8192, 2048),
+      Linear(4608, 2048),
       LeakyReLU(inplace=True),
       Linear(2048, 512),
       LeakyReLU(inplace=True),
