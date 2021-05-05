@@ -28,18 +28,19 @@ cont = False
 
 # %%
 # Hardware acceleration
-## accuracy vs epoch recording
+# accuracy vs epoch recording
 epoch_accuracy_pair = []
 
-#%%
-## Hardware acceleration
+# %%
+# Hardware acceleration
 
 torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # normalise the data
 transform = transforms.Compose(
-    [transforms.ToTensor(),
+    [transforms.Resize(64),
+     transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # %%
@@ -63,7 +64,8 @@ test_data = CIFAR10(
 
 batch_size = 64
 
-train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+train_dataloader = DataLoader(
+    training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
 # image is of 32x32 with 3 channel for colours
@@ -88,8 +90,11 @@ for X, y in test_dataloader:
 # print(f"Label: {label}")
 
 # %%
+# Networks
 
-network_model = network.Network()
+# network_model = network.Will_Network()
+network_model = network.Lexfee_Network()
+# network_model = network.Zijun_Network()
 
 # continue training -> load previous model
 if cont:
@@ -106,10 +111,13 @@ print(network_model)
 # define hyper-parameters
 
 batch_size = 64
-learning_rate = 1e-3
+# increase learning rate
+learning_rate = 7e-2
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-stochastic_GD = torch.optim.SGD(network_model.parameters(), lr=learning_rate)
+stochastic_GD = torch.optim.SGD(
+    network_model.parameters(), momentum=0.9, lr=learning_rate)
+adamw_GD = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
 
 # training
 
@@ -135,10 +143,12 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
 
         if batch % 50 == 0:
             loss, current = loss.item(), batch * len(X)
-            print(f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
+            print(
+                f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
 
     print()
-    print(f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
+    print(
+        f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
 
 
 def test_loop(dataloader, model: nn.Module, loss_fn):
@@ -161,24 +171,33 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct
 
 
-epochs = 350
+epochs = 75
 max_accuracy = 0
 consecutive = 0
 max_consecutive = 50
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
-    train_loop(train_dataloader, network_model, cross_entropy_loss, stochastic_GD)
+    train_loop(train_dataloader, network_model, cross_entropy_loss, adamw_GD)
     correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
 
     epoch_accuracy_pair.append((t, correct))
 
     if correct > max_accuracy:
-        consecutive = 0 # reset counter
+        consecutive = 0  # reset counter
         max_accuracy = correct
     else:
         consecutive += 1
-        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
+        print(
+            f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
+
+    # decrease learning rate
+    # if consecutive >= (max_consecutive/2) and learning_rate >= 1e-4:
+    #     learning_rate /= 2
+    #     stochastic_GD = torch.optim.SGD(network_model.parameters(),momentum=0.9, lr=learning_rate)
+    #     print(f"Learning rate decreased by half to: {learning_rate}")
+    #     # reset consecutive
+    #     consecutive = 0
 
     if consecutive == max_consecutive:
         print("model reached max potential, stopping.")
@@ -189,10 +208,11 @@ for t in range(epochs):
 print("Done!")
 print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
-## save model state
-torch.save(network_model.state_dict(), f"model.{int(script_start)}.pth")
+# save model state
+torch.save(network_model.state_dict(),
+           f"results/model.{int(script_start)}.pth")
 
 # atexit doesn't work
-with open(f"{int(script_start)}.plot.csv", 'w', newline='') as f:
+with open(f"results/{int(script_start)}.plot.csv", 'w', newline='') as f:
     writer = csv.writer(f)
     writer.writerows(epoch_accuracy_pair)
