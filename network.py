@@ -7,7 +7,7 @@ class Network(Module):
 
   def __init__(self):
     super(Network, self).__init__()
-    self.__version__ = "1.11.1"
+    self.__version__ = "1.12"
 
     # self.pool = MaxPool2d(2)  # 2*2 max pooling
 
@@ -36,11 +36,8 @@ class Network(Module):
       Conv2d(128, 128, 3, 1),
       BatchNorm2d(128),
       ReLU(inplace=True),
-      Dropout2d(p=0.375),
-      Conv2d(128, 128, 3, 1),
-      ReLU(inplace=True),
-      MaxPool2d(3, 2),
-      Dropout2d(p=0.16),
+      Dropout2d(p=0.3),
+      MaxPool2d(4, 2),
 
       Flatten(),
 
