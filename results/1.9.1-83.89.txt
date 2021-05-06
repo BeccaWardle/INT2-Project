@@ -1,0 +1,12 @@
+Epoch 75/200
+-------------------------------
+Loss: 0.107535 [48000/50000]
+time since start: 4309.59s, time since iteration start: 51.87s
+
+Accuracy: 83.73%, Avg loss: 0.010262
+
+no improvement: 20/20, max accuracy: 83.89%
+model reached max potential, stopping.
+max accuracy: 83.89%
+time since start: 4314.61s
+Done!
