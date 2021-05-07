@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from torch.nn import (BatchNorm2d, Conv2d, Dropout, Dropout2d, Flatten, ReLU,
+from torch.nn import (BatchNorm2d, Conv2d, Dropout, Dropout2d, Flatten,
                       LeakyReLU, Linear, MaxPool2d, Module, Sequential)
 
 
@@ -78,27 +78,27 @@ class Lexffe(Module):
         # Conv Layer block 1 -- feature extraction
         Conv2d(3, 32, 3, 1),
         BatchNorm2d(32),
-        ReLU(inplace=True),
+        LeakyReLU(inplace=True),
         Conv2d(32, 128, 3, 1), # 64
-        ReLU(inplace=True),
+        LeakyReLU(inplace=True),
         MaxPool2d(3, 2),
         Dropout2d(p=0.25),
 
         # Conv Layer block 2
         Conv2d(128, 256, 3, 1),
         BatchNorm2d(256),
-        ReLU(inplace=True),
+        LeakyReLU(inplace=True),
         MaxPool2d(3, 2),
         Dropout(p=0.4),
         Conv2d(256, 256, 3, 1),
-        ReLU(inplace=True),
+        LeakyReLU(inplace=True),
         MaxPool2d(4, 2),
         Dropout2d(p=0.25),
 
         # # Conv Layer block 3
         # Conv2d(128, 128, 3, 1),
         # BatchNorm2d(128),
-        # ReLU(inplace=True),
+        # LeakyReLU(inplace=True),
         # Dropout2d(p=0.3),
         # MaxPool2d(4, 2),
 
@@ -122,37 +122,37 @@ class Lexffe(Module):
 class Becca(Module):
     def __init__(self):
         self.name = "becca"
-        self.__version__ = 1.31
+        self.__version__ = 1.32
         super(Becca, self).__init__()
 
         self.cnn_relu_block_1 = Sequential(
             # Conv Layer block 1 -- feature extraction
-            Conv2d(3, 64, 3, 1),
-            BatchNorm2d(64),
-            ReLU(inplace=True),
-            Conv2d(64, 96, 3, 1), # 64
-            ReLU(inplace=True),
+            Conv2d(3, 128, 3, 1),
+            BatchNorm2d(128),
+            MaxPool2d(2, 2),
+            Conv2d(128, 256, 4, 1), # 64
+            LeakyReLU(inplace=True),
             MaxPool2d(2, 2),
             Dropout2d(p=0.2),
         )
 
         self.cnn_relu_block_2 = Sequential(
             # Conv Layer block 2
-            Conv2d(96, 256, 3, 1),
+            Conv2d(256, 256, 4, 1),
             BatchNorm2d(256),
-            ReLU(inplace=True),
+            LeakyReLU(inplace=True),
             Dropout(p=0.3),
-            Conv2d(256, 512, 3, 1),
-            ReLU(inplace=True),
+            Conv2d(256, 512, 7, 1),
+            LeakyReLU(inplace=True),
             MaxPool2d(3, 2),
             Dropout2d(p=0.2),
         )
 
         self.cnn_relu_block_3 = Sequential(
             # Co # Conv Layer block 3
-            Conv2d(512, 512, 3, 1),
+            Conv2d(512, 512, 6, 1),
             BatchNorm2d(512),
-            ReLU(inplace=True),
+            LeakyReLU(inplace=True),
             Dropout2d(p=0.3),
             MaxPool2d(4, 2),
         )
@@ -161,20 +161,20 @@ class Becca(Module):
             Flatten(),
         )
         self.cnn_relu_block_linear = Sequential(
-            Dropout(p=0.15),
-            Linear(8192, 4096),
+            Dropout(p=0.25),
+            Linear(2048, 1024),
             LeakyReLU(inplace=True),
             Dropout(p=0.5),
-            Linear(4096, 1024),
+            Linear(1024, 768    ),
             LeakyReLU(inplace=True),
-            Dropout(p=0.2),
-            Linear(1024, 10),
+            Dropout(p=0.3),
+            Linear(768, 10),
         )
 
     def forward(self, x):
         x = self.cnn_relu_block_1(x)
         x = self.cnn_relu_block_2(x)
-        x = self.cnn_relu_block_3(x)
+        # x = self.cnn_relu_block_3(x)
         #  print(f"{x.size()}")
         x = self.cnn_flatten(x)
         # print(f"{x.size()}")

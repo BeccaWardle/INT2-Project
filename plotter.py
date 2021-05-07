@@ -21,7 +21,10 @@ max_axi = 0
 for i, data in enumerate(dataframes):
     max_axi = len(data[:, 0]) if len(data[:, 0]) > max_axi else max_axi
     max_acc = max(data[:, 1]) if max(data[:, 1]) > max_acc else max_acc
-    if max(data[:, 1]) > 0.5:
+    if i == len(dataframes) - 1:
+        print("dashing: ", line_names[i])
+        ax.plot(data[:, 0], data[:, 1], label=str(line_names[i]), ls="-.")
+    elif max(data[:, 1]) > 0.5 and i < len(dataframes):
         print(line_names[i])
         ax.plot(data[:, 0], data[:, 1], label=str(line_names[i]))
 

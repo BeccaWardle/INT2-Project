@@ -71,7 +71,7 @@ for X, y in test_dataloader:
 # Networks
 
 # network_model = network.Will_Network()
-# network_model = network.Lexffe_Network()
+# network_model = network.Lexffe()
 network_model = network.Becca()
 # network_model = network.Zijun_Network()
 # network_model = network.Becca_long()
