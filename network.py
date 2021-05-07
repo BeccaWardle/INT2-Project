@@ -7,7 +7,7 @@ class Network(Module):
 
   def __init__(self):
     super(Network, self).__init__()
-    self.__version__ = "1.19"
+    self.__version__ = "1.20"
 
     # self.pool = MaxPool2d(2)  # 2*2 max pooling
 
@@ -19,33 +19,35 @@ class Network(Module):
       ReLU(inplace=True),
       Conv2d(32, 128, 3, 1), # 64
       ReLU(inplace=True),
-      MaxPool2d(3, 2),
+      MaxPool2d(2, 2),
       Dropout2d(p=0.25),
 
       # Conv Layer block 2
       Conv2d(128, 256, 3, 1),
       BatchNorm2d(256),
       ReLU(inplace=True),
-      MaxPool2d(3, 2),
       Dropout(p=0.4),
       Conv2d(256, 256, 3, 1),
       ReLU(inplace=True),
-      MaxPool2d(4, 2),
+      MaxPool2d(2, 2),
       Dropout2d(p=0.25),
 
-      # # Conv Layer block 3
-      # Conv2d(128, 128, 3, 1),
-      # BatchNorm2d(128),
-      # ReLU(inplace=True),
-      # Dropout2d(p=0.3),
-      # MaxPool2d(4, 2),
+      # Conv Layer block 3
+      Conv2d(256, 256, 3, 1),
+      BatchNorm2d(256),
+      ReLU(inplace=True),
+      Dropout(p=0.25),
+      Conv2d(256, 256, 3, 1),
+      ReLU(inplace=True),
+      MaxPool2d(4, 2),
+      Dropout2d(p=0.375),
 
       Flatten(),
 
       Dropout(p=0.2),
-      Linear(4096, 1024),
+      Linear(2304, 1024),
       LeakyReLU(inplace=True),
-      Dropout(p=0.32),
+      Dropout(p=0.5),
       Linear(1024, 128),
       LeakyReLU(inplace=True),
       Dropout(p=0.2),
