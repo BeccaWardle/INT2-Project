@@ -3,3 +3,4 @@ data/
 __pycache__/
 model.pth
 .idea/
+results/networks/

@@ -5,10 +5,10 @@
 # Dataset homepage
 # https://www.cs.toronto.edu/~kriz/cifar.html
 
-# %%
 # Imports
 
 import datetime
+import signal
 from time import time
 
 import torch
@@ -27,7 +27,8 @@ cont = False
 pair = []
 
 
-# %%
+batch_size = 64
+
 # Hardware acceleration
 
 torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -39,7 +40,6 @@ transform = transforms.Compose(
      transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-# %%
 # load data (download data from UToronto)
 training_data = CIFAR10(
     root="data",
@@ -55,11 +55,6 @@ test_data = CIFAR10(
     transform=transform,
 )
 
-# load the dataset, describe the shape
-# %%
-
-batch_size = 64
-
 train_dataloader = DataLoader(
     training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
@@ -73,25 +68,13 @@ for X, y in test_dataloader:
     print("Shape of y: ", y.shape, y.dtype)  # classification
     break
 
-# %%
-# Visualisation
-
-# train_features , train_labels = next(iter(train_dataloader))
-# print(f"Feature batch shape: {train_features.size()}")
-# print(f"Labels batch shape: {train_labels.size()}")
-# img = train_features[0].squeeze().permute(1,2,0)
-# label = train_labels[0]
-# plt.imshow(img)
-# plt.show()
-# print(f"Label: {label}")
-
-# %%
 # Networks
 
 # network_model = network.Will_Network()
 # network_model = network.Lexffe_Network()
-network_model = network.Lexffe_Network_2()
+network_model = network.Becca()
 # network_model = network.Zijun_Network()
+# network_model = network.Becca_long()
 
 # continue training -> load previous model
 if cont:
@@ -106,14 +89,12 @@ print(network_model)
 # pred_probab = nn.Softmax(dim=1)(logits)
 
 # define hyper-parameters
-
-batch_size = 64
-# increase learning rate
-learning_rate = 7e-2
+learning_rate = 5e-2
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-stochastic_GD = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
-adamw_GD = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
+optimiser = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
+# optimiser = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min')
 
 # training
 epoch_accuracy_pair = []
@@ -166,11 +147,11 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 
     print(f"Accuracy: {(100 * correct):>0.2f}%, Avg loss: {test_loss:>8f}\n")
 
-    return correct
+    return correct, test_loss
 
 
-def save(t, correct):    
-    file_name = f"results/{int(script_start)}-{network_model.name}_{network_model.version}.csv"
+def save(t, correct):
+    file_name = f"results/{int(script_start)}-{network_model.name}_{network_model.__version__}.csv"
     global failed_write
     global epoch_accuracy_pair
     try:
@@ -186,29 +167,32 @@ def save(t, correct):
         failed_write = True
 
 
-epochs = 100
+def net_save(signum, frame):
+    torch.save(network_model.state_dict(), f"results/networks/{int(script_start)}-{network_model.name}_{network_model.__version__}.pth")
+    exit()
+
+
+epochs = 150
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 50
+max_consecutive = 15
 
-
-
+signal.signal(signal.SIGINT, net_save)
 
 for t in range(epochs):
     print(f"Epoch {t+1}/{epochs}\n-------------------------------")
-    train_loop(train_dataloader, network_model, cross_entropy_loss, adamw_GD)
-    correct = test_loop(test_dataloader, network_model, cross_entropy_loss)
-    
+    train_loop(train_dataloader, network_model, cross_entropy_loss, optimiser)
+    correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
+    sched.step(loss)
+
     save(t, correct)
 
-
     if correct > max_accuracy:
-        consecutive = 0  # reset counter
+        consecutive = 0
         max_accuracy = correct
     else:
         consecutive += 1
-        print(
-            f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
+        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
 
     # decrease learning rate
     # if consecutive >= (max_consecutive/2) and learning_rate >= 1e-4:
@@ -227,6 +211,4 @@ for t in range(epochs):
 print("Done!")
 print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
-# save model state
-torch.save(network_model.state_dict(),
-           f"results/model.{int(script_start)}.pth")
+net_save(0, 0)
