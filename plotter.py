@@ -24,7 +24,7 @@ for i, data in enumerate(dataframes):
     if i == len(dataframes) - 1:
         print("dashing: ", line_names[i])
         ax.plot(data[:, 0], data[:, 1], label=str(line_names[i]), ls="-.")
-    elif max(data[:, 1]) > 0.5 and i < len(dataframes):
+    elif max(data[:, 1]) > 0.75 and i < len(dataframes):
         print(line_names[i])
         ax.plot(data[:, 0], data[:, 1], label=str(line_names[i]))
 

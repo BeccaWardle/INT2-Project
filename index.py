@@ -36,7 +36,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # normalise the data
 transform = transforms.Compose(
-    [transforms.Resize(64),
+    [transforms.Resize((64, 64)),
      transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
@@ -89,12 +89,12 @@ print(network_model)
 # pred_probab = nn.Softmax(dim=1)(logits)
 
 # define hyper-parameters
-learning_rate = 5e-2
+learning_rate = 1e-2
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 optimiser = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
 # optimiser = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
-sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min')
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=10)
 
 # training
 epoch_accuracy_pair = []
@@ -102,7 +102,7 @@ failed_write = False
 
 
 def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Optimizer):
-
+    model.train()
     iteration_start = time()
     size = len(dataloader.dataset)
     for batch, (X, y) in enumerate(dataloader):
@@ -131,7 +131,7 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
 
 
 def test_loop(dataloader, model: nn.Module, loss_fn):
-
+    model.eval()
     size = len(dataloader.dataset)
     test_loss, correct = 0, 0
 
@@ -172,10 +172,10 @@ def net_save(signum, frame):
     exit()
 
 
-epochs = 150
+epochs = 100000
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 15
+max_consecutive = 15000
 
 signal.signal(signal.SIGINT, net_save)
 
