@@ -9,6 +9,7 @@
 
 import datetime
 import signal
+from os import system
 from time import time
 
 import torch
@@ -23,7 +24,7 @@ script_start = time()
 print(f"Started: {datetime.datetime.now()}")
 
 # continue training
-cont = False
+cont = "results/networks/1620517473-becca_1.41.pth"
 pair = []
 
 
@@ -35,10 +36,12 @@ torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # normalise the data
-transform = transforms.Compose(
-    [transforms.Resize((64, 64)),
-     transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+
+transform = transforms.Compose([
+    transforms.Resize((64, 64)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+])
 
 # load data (download data from UToronto)
 training_data = CIFAR10(
@@ -72,14 +75,14 @@ for X, y in test_dataloader:
 
 # network_model = network.Will_Network()
 # network_model = network.Lexffe()
-network_model = network.Becca()
+# network_model = network.Becca()
 # network_model = network.Zijun_Network()
-# network_model = network.Becca_long()
+network_model = network.Becca_long()
 
 # continue training -> load previous model
 if cont:
     print("continuing previous progress.")
-    network_model.load_state_dict(torch.load("model.pth"))
+    network_model.load_state_dict(torch.load(cont))
     network_model.eval()
 
 network_model.to(device)  # send tensors to CUDA cores
@@ -89,12 +92,13 @@ print(network_model)
 # pred_probab = nn.Softmax(dim=1)(logits)
 
 # define hyper-parameters
-learning_rate = 1e-2
+learning_rate = 5e-3
+patience = 10
 
 cross_entropy_loss = nn.CrossEntropyLoss()
 optimiser = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
 # optimiser = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
-sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=10)
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=patience)
 
 # training
 epoch_accuracy_pair = []
@@ -172,15 +176,15 @@ def net_save(signum, frame):
     exit()
 
 
-epochs = 100000
+epochs = 120
 max_accuracy = 0
 consecutive = 0
-max_consecutive = 15000
+max_consecutive = 15
 
 signal.signal(signal.SIGINT, net_save)
 
 for t in range(epochs):
-    print(f"Epoch {t+1}/{epochs}\n-------------------------------")
+    print(f"Epoch {t+1}/{epochs}, Learning rate: {optimiser.param_groups[0]['lr']}\n------------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, optimiser)
     correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
     sched.step(loss)
@@ -192,7 +196,7 @@ for t in range(epochs):
         max_accuracy = correct
     else:
         consecutive += 1
-        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%")
+        print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%\n")
 
     # decrease learning rate
     # if consecutive >= (max_consecutive/2) and learning_rate >= 1e-4:
@@ -209,6 +213,7 @@ for t in range(epochs):
         break
 
 print("Done!")
+system("vlc alert.ogg")
 print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
 
 net_save(0, 0)

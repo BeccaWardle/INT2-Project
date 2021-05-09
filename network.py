@@ -124,8 +124,76 @@ class Lexffe(Module):
 class Becca(Module):
     def __init__(self):
         self.name = "becca"
-        self.__version__ = 1.41
+        self.__version__ = 1.46
         super(Becca, self).__init__()
+
+        self.cnn_relu_block_1 = Sequential(
+            # Conv Layer block 1 -- feature extraction
+            Conv2d(3, 32, 3, 1),
+            BatchNorm2d(32),
+            LeakyReLU(inplace=True),
+            Conv2d(32, 128, 3, 1),
+            LeakyReLU(inplace=True),
+            MaxPool2d(4, 3),
+            Dropout2d(p=0.3),
+
+        )
+
+        self.cnn_relu_block_2 = Sequential(
+            # Conv Layer block 2
+            Conv2d(128, 256, 3, 1),
+            BatchNorm2d(256),
+            LeakyReLU(inplace=True),
+            Dropout(p=0.25),
+            Conv2d(256, 256, 4, 1),
+            LeakyReLU(inplace=True),
+            MaxPool2d(5, 3),
+            Dropout2d(p=0.35),
+        )
+
+        self.cnn_relu_block_3 = Sequential(
+            # Conv Layer block 3
+            Conv2d(256, 384, 4, 1),
+            BatchNorm2d(384),
+            LeakyReLU(inplace=True),
+            Dropout(p=0.5),
+            Conv2d(384, 384, 4, 1),
+            LeakyReLU(inplace=True),
+            MaxPool2d(5, 3),
+            Dropout2d(p=0.375),
+        )
+
+        self.cnn_flatten = Sequential(
+            Flatten(),
+        )
+        self.cnn_relu_block_linear = Sequential(
+            Dropout(p=0.2),
+            Linear(4096, 2048),
+            LeakyReLU(inplace=True),
+            Dropout(p=0.3),
+            Linear(2048, 512),
+            LeakyReLU(inplace=True),
+            Dropout(p=0.25),
+            Linear(512, 10),
+            # softmax (?)
+        )
+
+    def forward(self, x):
+        x = self.cnn_relu_block_1(x)
+        x = self.cnn_relu_block_2(x)
+        # x = self.cnn_relu_block_3(x)
+        #  print(f"{x.size()}")
+        x = self.cnn_flatten(x)
+        # print(f"{x.size()}")
+        x = self.cnn_relu_block_linear(x)
+        return x
+
+
+class Becca_long(Module):
+    def __init__(self):
+        self.name = "becca"
+        self.__version__ = 1.41
+        super(Becca_long, self).__init__()
 
         self.cnn_relu_block_1 = Sequential(
             # Conv Layer block 1 -- feature extraction
@@ -148,7 +216,7 @@ class Becca(Module):
             Conv2d(256, 256, 4, 1),
             LeakyReLU(inplace=True),
             MaxPool2d(5, 3),
-            Dropout2d(p=0.35),
+            Dropout2d(p=0.5),
         )
 
         self.cnn_relu_block_3 = Sequential(
@@ -156,7 +224,7 @@ class Becca(Module):
             Conv2d(256, 384, 4, 1),
             BatchNorm2d(384),
             LeakyReLU(inplace=True),
-            Dropout(p=0.25),
+            Dropout(p=0.5),
             Conv2d(384, 384, 4, 1),
             LeakyReLU(inplace=True),
             MaxPool2d(5, 3),
@@ -183,91 +251,6 @@ class Becca(Module):
         x = self.cnn_relu_block_2(x)
         # x = self.cnn_relu_block_3(x)
         #  print(f"{x.size()}")
-        x = self.cnn_flatten(x)
-        # print(f"{x.size()}")
-        x = self.cnn_relu_block_linear(x)
-        return x
-
-
-class Becca_long(Module):
-    def __init__(self):
-        self.name = "becca_long"
-        self.__version__ = 1.1
-        super(Becca_long, self).__init__()
-
-        self.cnn_relu_block_1 = Sequential(
-            # Conv Layer block 1
-            Conv2d(3, 64, 3, 1),
-            BatchNorm2d(64),
-            LeakyReLU(inplace=True),
-            Conv2d(64, 128, 3, 1, padding=2),  # 64
-            LeakyReLU(inplace=True),
-            MaxPool2d(2, 2),
-            Dropout2d(p=0.16),
-        )
-
-        self.cnn_relu_block_2 = Sequential(
-            # Conv Layer block 2
-            Conv2d(128, 256, 3, 1, padding=2),
-            LeakyReLU(inplace=True),
-            MaxPool2d(2, 2),
-            Dropout2d(p=0.2),
-            # Dropout(p=0.2),
-        )
-
-        self.cnn_relu_block_3 = Sequential(
-            # Conv Layer block 3
-            Conv2d(256, 256, 3, 1),
-            BatchNorm2d(256),
-            LeakyReLU(inplace=True),
-            Dropout2d(p=0.2),
-            Conv2d(256, 256, 3, 1, padding=2),
-            LeakyReLU(inplace=True),
-            MaxPool2d(3, 2),
-            Dropout2d(p=0.25),
-        )
-
-        self.cnn_relu_block_4 = Sequential(
-            # Conv Layer block 4
-            Conv2d(256, 256, 3, 1),
-            LeakyReLU(inplace=True),
-            Conv2d(256, 512, 3, 1, padding=2),
-            LeakyReLU(inplace=True),
-            MaxPool2d(3, 2),
-        )
-
-        self.cnn_relu_block_5 = Sequential(
-            # Conv Layer block 4
-            Conv2d(512, 512, 3, 1, padding=2),
-            LeakyReLU(inplace=True),
-            MaxPool2d(3, 2),
-        )
-
-        self.cnn_flatten = Sequential(
-            Flatten(),
-        )
-
-        self.cnn_relu_block_linear = Sequential(
-            Linear(2048, 1024),
-            LeakyReLU(inplace=True),
-            Linear(1024, 512),
-            LeakyReLU(inplace=True),
-            Dropout(p=0.1),
-            Linear(512, 384),
-            LeakyReLU(inplace=True),
-            Dropout(p=0.16),
-            Linear(384, 256),
-            LeakyReLU(inplace=True),
-            Linear(256, 10),
-        )
-
-    def forward(self, x):
-        x = self.cnn_relu_block_1(x)
-        x = self.cnn_relu_block_2(x)
-        x = self.cnn_relu_block_3(x)
-        x = self.cnn_relu_block_4(x)
-        x = self.cnn_relu_block_5(x)
-        # print(f"{x.size()}")
         x = self.cnn_flatten(x)
         # print(f"{x.size()}")
         x = self.cnn_relu_block_linear(x)
