@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
+import torch
+from torch.autograd import Variable
 from torch.nn import \
   Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, BatchNorm2d, Dropout, Dropout2d, LeakyReLU
-
+from torchviz import make_dot, make_dot_from_trace
 
 class Network(Module):
   def __init__(self):
     super(Network, self).__init__()
 
-    self.conv_layer = Sequential(
+    self.cnn_relu_stack = Sequential(
+
       # Conv Layer block 1
       Conv2d(3, 32, 3, 1),
       BatchNorm2d(32),
@@ -57,20 +60,11 @@ class Network(Module):
       Linear(512, 10),
       # softmax (?)
     )
-
-      ## Conv Layer block 1
+          ## Conv Layer block 1
   
+  def draw(self, y):
+    model = self.cnn_relu_stack
+    make_dot(y.mean(), params=dict(model.named_parameters()))
 
   def forward(self, x):
-    """Perform forward."""
-    
-    # conv layers
-    x = self.conv_layer(x)
-    
-    # flatten
-    x = x.view(x.size(0), -1)
-    
-    # fc layer
-    x = self.fc_layer(x)
-
-    return x
+    return self.cnn_relu_stack(x)
