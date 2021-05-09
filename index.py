@@ -27,6 +27,7 @@ cont = ""
 pair = []
 SQS = False
 jit = False
+adam = False
 
 if SQS is True:
     import boto3
@@ -209,7 +210,7 @@ for t in range(epochs):
         print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
         print(f"time since start: {time() - script_start:>0.2f}s")
         break
-    
+
     if SQS is True and queue:
         response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
 
