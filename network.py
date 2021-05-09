@@ -7,7 +7,7 @@ class Network(Module):
 
   def __init__(self):
     super(Network, self).__init__()
-    self.__version__ = "1.22.1"
+    self.__version__ = "1.23"
 
     # self.pool = MaxPool2d(2)  # 2*2 max pooling
 
@@ -19,7 +19,7 @@ class Network(Module):
       LeakyReLU(inplace=True),
       Conv2d(32, 128, 3, 1), # 64
       LeakyReLU(inplace=True),
-      MaxPool2d(2, 2),
+      MaxPool2d(3, 2),
       Dropout2d(p=0.25),
 
       # Conv Layer block 2
@@ -45,7 +45,7 @@ class Network(Module):
       Flatten(),
 
       Dropout(p=0.2),
-      Linear(3456, 1024),
+      Linear(1536, 1024),
       LeakyReLU(inplace=True),
       Dropout(p=0.4),
       Linear(1024, 128),
