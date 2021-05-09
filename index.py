@@ -9,7 +9,6 @@
 
 import datetime
 import signal
-from os import system
 from time import time
 
 import torch
@@ -23,12 +22,19 @@ import network
 script_start = time()
 print(f"Started: {datetime.datetime.now()}")
 
-# continue training
-cont = "results/networks/1620517473-becca_1.41.pth"
-pair = []
-
-
 batch_size = 64
+cont = ""
+pair = []
+SQS = False
+jit = False
+
+if SQS is True:
+    import boto3
+
+    sqs = boto3.resource('sqs')
+
+    # Create the queue. This returns an SQS.Queue instance
+    queue = sqs.get_queue_by_name(QueueName='model.fifo')
 
 # Hardware acceleration
 
@@ -58,15 +64,13 @@ test_data = CIFAR10(
     transform=transform,
 )
 
-train_dataloader = DataLoader(
-    training_data, batch_size=batch_size, shuffle=True)
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
 
 # image is of 32x32 with 3 channel for colours
 # batch size is 64, but can be modified
 
 for X, y in test_dataloader:
-
     print("Shape of X [n, Channels, Height, Width]: ", X.shape, X.dtype)
     print("Shape of y: ", y.shape, y.dtype)  # classification
     break
@@ -74,10 +78,12 @@ for X, y in test_dataloader:
 # Networks
 
 # network_model = network.Will_Network()
-# network_model = network.Lexffe()
+network_model = network.Lexffe()
 # network_model = network.Becca()
 # network_model = network.Zijun_Network()
-network_model = network.Becca_long()
+
+if jit is True:
+    network_model = torch.jit.script(network_model)
 
 # continue training -> load previous model
 if cont:
@@ -93,15 +99,16 @@ print(network_model)
 
 # define hyper-parameters
 learning_rate = 5e-3
+momentum = 0.9
 patience = 10
 
 cross_entropy_loss = nn.CrossEntropyLoss()
-optimiser = torch.optim.SGD(network_model.parameters(), momentum=0.9, lr=learning_rate)
-# optimiser = torch.optim.AdamW(network_model.parameters(), lr=learning_rate)
+optimiser = torch.optim.Adam(network_model.parameters()) if adam is True else \
+    torch.optim.SGD(network_model.parameters(), lr=learning_rate, momentum=momentum)
 sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimiser, 'min', patience=patience)
 
 # training
-epoch_accuracy_pair = []
+epoch_progress = []
 failed_write = False
 
 
@@ -130,8 +137,7 @@ def train_loop(dataloader, model: nn.Module, loss_fn, optimiser: torch.optim.Opt
                 f"Loss: {loss:>7f} [{current:>5d}/{size:>5d}]", sep="", end="\r", flush=True)
 
     print()
-    print(
-        f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
+    print(f"time since start: {time() - script_start:>0.2f}s, time since iteration start: {time() - iteration_start:>0.2f}s \n")
 
 
 def test_loop(dataloader, model: nn.Module, loss_fn):
@@ -154,24 +160,24 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct, test_loss
 
 
-def save(t, correct):
+def save_csv(t, correct):
     file_name = f"results/{int(script_start)}-{network_model.name}_{network_model.__version__}.csv"
     global failed_write
-    global epoch_accuracy_pair
+    global epoch_progress
     try:
         with open(file_name, "a") as f:
             if failed_write:
-                for line in epoch_accuracy_pair:
+                for line in epoch_progress:
                     f.write(f"{line[0]}.{line[1]}\n")
                 failed_write = False
             else:
                 f.write(f"{t},{correct}\n")
     except PermissionError:
-        epoch_accuracy_pair.append((t, correct))
+        epoch_progress.append((t, correct))
         failed_write = True
 
 
-def net_save(signum, frame):
+def save_net(signum, frame):
     torch.save(network_model.state_dict(), f"results/networks/{int(script_start)}-{network_model.name}_{network_model.__version__}.pth")
     exit()
 
@@ -181,15 +187,15 @@ max_accuracy = 0
 consecutive = 0
 max_consecutive = 15
 
-signal.signal(signal.SIGINT, net_save)
+signal.signal(signal.SIGINT, save_net)
 
 for t in range(epochs):
-    print(f"Epoch {t+1}/{epochs}, Learning rate: {optimiser.param_groups[0]['lr']}\n------------------------------------")
+    print(f"Epoch {t + 1}/{epochs}, Learning rate: {optimiser.param_groups[0]['lr']}\n------------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, optimiser)
     correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
     sched.step(loss)
 
-    save(t, correct)
+    save_csv(t, correct)
 
     if correct > max_accuracy:
         consecutive = 0
@@ -198,22 +204,14 @@ for t in range(epochs):
         consecutive += 1
         print(f"no improvement: {consecutive}/{max_consecutive}, max accuracy: {(100 * max_accuracy):>0.2f}%\n")
 
-    # decrease learning rate
-    # if consecutive >= (max_consecutive/2) and learning_rate >= 1e-4:
-    #     learning_rate /= 2
-    #     stochastic_GD = torch.optim.SGD(network_model.parameters(),momentum=0.9, lr=learning_rate)
-    #     print(f"Learning rate decreased by half to: {learning_rate}")
-    #     # reset consecutive
-    #     consecutive = 0
-
     if consecutive == max_consecutive:
         print("model reached max potential, stopping.")
         print(f"max accuracy: {(100 * max_accuracy):>0.2f}%")
         print(f"time since start: {time() - script_start:>0.2f}s")
         break
+    
+    if SQS is True and queue:
+        response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
 
 print("Done!")
-system("vlc alert.ogg")
-print(f"Average epoch length: {(time() - script_start)/epochs :>0.2f}s")
-
-net_save(0, 0)
+save_net(0, 0)
