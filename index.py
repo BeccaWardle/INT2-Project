@@ -70,7 +70,6 @@ transform = transforms.Compose(
      transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-# %%
 # load data (download data from UToronto)
 training_data = CIFAR10(
     root="data",
@@ -87,8 +86,6 @@ test_data = CIFAR10(
 )
 
 # load the dataset, describe the shape
-# %%
-
 
 train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
 test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
