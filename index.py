@@ -191,8 +191,9 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 
 def save(signum, frame):
     ## save model state
+
     torch.save(network_model,
-               f"result/network.{int(script_start)}.{network_model.__version__}.pth")
+               f"result/network.{int(script_start)}.{network.Network().__version__}.pth")
 
     torch.save(network_model.state_dict(), f"result/model.{int(script_start)}.pth")
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from torch.nn import \
   Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, BatchNorm2d, Dropout2d, Dropout, \
-  LeakyReLU
+  LeakyReLU, AvgPool2d
 
 class Network(Module):
 
@@ -29,7 +29,7 @@ class Network(Module):
       Dropout(p=0.4),
       Conv2d(128, 128, 3, 1),
       LeakyReLU(inplace=True),
-      MaxPool2d(4, 2),
+      AvgPool2d(4, 2),
       Dropout2d(p=0.35),
 
       # Conv Layer block 3
@@ -40,7 +40,7 @@ class Network(Module):
       Conv2d(128, 192, 3, 1),
       LeakyReLU(inplace=True),
       BatchNorm2d(192),
-      MaxPool2d(4, 2),
+      AvgPool2d(4, 2),
       Dropout2d(p=0.375),
 
       Flatten(),
