@@ -6,3 +6,5 @@ __pycache__/
 
 result/*.plot.csv
 result/*.pth
+
+tensorboard/

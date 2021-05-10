@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -7,7 +9,8 @@ from torch import utils
 import matplotlib.pyplot as plt
 import numpy as np
 
-model_name = "1620557913"
+model_name = "1620682577"
+version = "2.1"
 tensorboard_log = f"tensorboard/model_{model_name}"
 batch_size = 64
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -28,7 +31,7 @@ def visTensor(tensor, ch=0, allkernels=False, nrow=8, padding=1):
 
 layer = 1
 
-model = torch.load(f"model.{model_name}.pth", map_location=torch.device(device))
+model = torch.load(f"result/network.{model_name}.{version}.pth", map_location=torch.device(device))
 model.eval()
 
 filter = model.features[layer].weight.data.clone()

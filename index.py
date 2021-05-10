@@ -19,9 +19,16 @@ cont_fname = "model.pth"
 
 ## Feature: notification service
 SQS = True
-queue = False
-jit = False
-adam = False
+queue = False # SQS
+
+## Feature: torch-related configs
+jit = False # JIT compiler
+
+## NN: optimiser
+adam = False # Adam optimiser
+
+## Tensorboard
+TBoard = True
 
 ## main code
 
@@ -32,6 +39,9 @@ if SQS is True:
 
     # Create the queue. This returns an SQS.Queue instance
     queue = sqs.get_queue_by_name(QueueName='model.fifo')
+
+if TBoard is True:
+    from torch.utils.tensorboard import SummaryWriter
 
 # %%
 # Imports
@@ -47,8 +57,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-
 import network
+
 
 script_start = time()
 print(f"Started: {datetime.datetime.now()}")
@@ -192,16 +202,34 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 def save(signum, frame):
     ## save model state
 
-    torch.save(network_model,
-               f"result/network.{int(script_start)}.{network.Network().__version__}.pth")
+    timestamp = int(script_start)
+    version = network.Network().__version__
 
-    torch.save(network_model.state_dict(), f"result/model.{int(script_start)}.pth")
+    torch.save(network_model,
+               f"result/network.{timestamp}.{version}.pth")
+
+    torch.save(network_model.state_dict(), f"result/model.{timestamp}.pth")
 
     # atexit doesn't work
-    with open(f"result/{int(script_start)}.plot.csv", 'w', newline='') as f:
+    with open(f"result/{timestamp}.plot.csv", 'w', newline='') as f:
         writer = csv.writer(f)
         writer.writerows(epoch_accuracy_pair)
         f.close()
+
+    # tensorboard subroutine
+
+    if TBoard is True:
+
+        tensorboard_log = f"tensorboard/model_{timestamp}_{version}"
+
+        network_model.eval()
+        writer = SummaryWriter(tensorboard_log)
+
+        dataiter = iter(train_dataloader)
+        images, labels = next(dataiter)
+
+        writer.add_graph(network_model, images)
+        writer.close()
 
     exit()
 
