@@ -128,16 +128,7 @@ writer = SummaryWriter('runs/fashion_mnist_experiment_1')
 
 # get some random training images
 dataiter = iter(train_dataloader)
-images, labels = dataiter.next()
-
-# create grid of images
-img_grid = torchvision.utils.make_grid(images)
-
-
-# write to tensorboard
-writer.add_image('four_fashion_mnist_images', img_grid)
-print("print successfully")
-# tensorboard --logdir=runs
+images = dataiter.next()
 
 import network
 net = network.Network()
