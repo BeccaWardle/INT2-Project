@@ -16,7 +16,7 @@ class Network(Module):
       # Conv Layer block 1 -- feature extraction
       Conv2d(3, 32, 3, 1),
       LeakyReLU(inplace=True),
-      BatchNorm2d(16),
+      BatchNorm2d(32),
       Conv2d(32, 32, 3, 1), # 64
       LeakyReLU(inplace=True),
       # MaxPool2d(2, 2),
