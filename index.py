@@ -7,7 +7,7 @@
 
 # parameters
 
-batch_size = 64
+batch_size = 32
 learning_rate = 1e-2
 momentum = 0.9
 epochs = 100
@@ -88,8 +88,8 @@ test_data = CIFAR100(
 
 # load the dataset, describe the shape
 
-train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
-test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False)
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True, num_workers=2)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=False, num_workers=2)
 
 # image is of 32x32 with 3 channel for colours
 # batch size is 64, but can be modified
