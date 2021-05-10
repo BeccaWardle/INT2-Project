@@ -52,7 +52,7 @@ class Network(Module):
       Linear(1024, 128),
       LeakyReLU(inplace=True),
       Dropout(p=0.25),
-      Linear(128, 10),
+      Linear(128, 100),
       # softmax (?)
     )
 
