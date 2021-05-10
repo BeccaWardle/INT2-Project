@@ -10,7 +10,7 @@ class Network(Module):
     super(Network, self).__init__()
 
     # 2.0: redesign entire network
-    self.__version__ = "2.0"
+    self.__version__ = "2.1"
 
     """
     Conv2d -> LeakyReLU -> Conv2d -> LeakyReLU -> Normalise
@@ -25,7 +25,8 @@ class Network(Module):
     """
 
     k = lambda chan: 3 * (2**chan) # channel multiplier
-    dropout_p = 0.5
+    filter_dropout_p = 0.375
+    linear_dropout_p = 0.4
 
     # CNN
     self.cnn_relu_stack = Sequential(
@@ -52,7 +53,7 @@ class Network(Module):
 
       MaxPool2d(2, 2), # subsampling, reduces parameter size, increase performance, halfs the size
 
-      Dropout2d(dropout_p), # drop out entire filters
+      Dropout2d(filter_dropout_p), # drop out entire filters
 
       #5
       Conv2d(k(5), k(6), (3, 3), (1, 1)),
@@ -62,13 +63,9 @@ class Network(Module):
 
       # MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
 
-      Dropout2d(dropout_p),  # drop out entire filters
-
       #6
       Conv2d(k(6), k(6), (3, 3), (1, 1)),
       LeakyReLU(),
-
-      Dropout2d(dropout_p),  # drop out entire filters
 
       #7
       Conv2d(k(6), k(6), (3, 3), (1, 1)),
@@ -80,7 +77,7 @@ class Network(Module):
       Conv2d(k(6), k(7), (3, 3), (1, 1)),
       LeakyReLU(),
       MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
-      Dropout2d(dropout_p),  # drop out entire filters
+      Dropout2d(filter_dropout_p),  # drop out entire filters
 
     )
 
@@ -88,6 +85,7 @@ class Network(Module):
     self.reduction_stack = Sequential(
       Linear(1536, 1024),
       LeakyReLU(),
+      Dropout(linear_dropout_p),
       Linear(1024, 512),
       LeakyReLU(),
       Linear(512, 10),
