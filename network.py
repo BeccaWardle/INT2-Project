@@ -1,60 +1,74 @@
 #!/usr/bin/env python3
 from torch.nn import \
   Conv2d, ReLU, Linear, MaxPool2d, Module, Flatten, Sequential, BatchNorm2d, Dropout2d, Dropout, \
-  LeakyReLU, AvgPool2d
+  LeakyReLU
 
 class Network(Module):
 
   def __init__(self):
+
     super(Network, self).__init__()
-    self.__version__ = "1.26"
 
-    # self.pool = MaxPool2d(2)  # 2*2 max pooling
+    # 2.0: redesign entire network
+    self.__version__ = "2.0"
 
+    """
+    Conv2d 3:32 -> LeakyReLU -> Conv2d 32:32 -> LeakyReLU -> Normalise
+    Conv2d 32:128 -> LeakyReLU -> Conv2d 128:128 -> LeakyReLU -> Normalise -> MaxPool2d 4,2
+      Dropout2d 0.48
+    Conv2d 128:192 -> LeakyReLU -> Normalise -> MaxPool2d 4,2
+      Dropout2d 0.48
+    
+    Flatten to 1D
+    
+    Reduction: 1728 -> 1024 -> 512 -> 10
+    """
+
+    # CNN
     self.cnn_relu_stack = Sequential(
+      Conv2d(in_channels=3, out_channels=32, kernel_size=(3,3), stride=(1,1)),
+      LeakyReLU(), # no inplace.
 
-      # Conv Layer block 1 -- feature extraction
-      Conv2d(3, 32, 3, 1),
-      LeakyReLU(inplace=True),
+      Conv2d(32, 32, (3,3), (1,1)),
+      LeakyReLU(),
+
       BatchNorm2d(32),
-      Conv2d(32, 128, 3, 1), # 64
-      LeakyReLU(inplace=True),
-      # MaxPool2d(2, 2),
-      Dropout2d(p=0.25),
 
-      # Conv Layer block 2
-      Conv2d(128, 128, 3, 1),
-      LeakyReLU(inplace=True),
+      Conv2d(32, 128, (3, 3), (1, 1)), # increase filter size
+      LeakyReLU(),
+
+      Conv2d(128, 128, (3, 3), (1, 1)),
+      LeakyReLU(),
+
       BatchNorm2d(128),
-      Dropout(p=0.4),
-      Conv2d(128, 128, 3, 1),
-      LeakyReLU(inplace=True),
-      AvgPool2d(4, 2),
-      Dropout2d(p=0.35),
 
-      # Conv Layer block 3
-      # Conv2d(128, 256, 3, 1),
-      # BatchNorm2d(256),
-      # LeakyReLU(inplace=True),
-      # Dropout(p=0.3),
-      Conv2d(128, 192, 3, 1),
-      LeakyReLU(inplace=True),
+      MaxPool2d(4,2), # subsampling, reduces parameter size, increase performance (128 filters)
+
+      Dropout2d(0.48), # drop out entire filters, p=0.48
+
+      Conv2d(128, 192, (3, 3), (1, 1)),
+      LeakyReLU(),
+
       BatchNorm2d(192),
-      AvgPool2d(4, 2),
-      Dropout2d(p=0.375),
 
-      Flatten(),
+      MaxPool2d(4, 2),  # subsampling, reduces parameter size, increase performance (128 filters)
 
-      Dropout(p=0.2),
-      Linear(1728, 1024),
-      LeakyReLU(inplace=True),
-      Dropout(p=0.375),
-      Linear(1024, 128),
-      LeakyReLU(inplace=True),
-      Dropout(p=0.25),
-      Linear(128, 10),
-      # softmax (?)
+      Dropout2d(0.48),  # drop out entire filters, p=0.48
     )
 
-  def forward(self, x):
-    return self.cnn_relu_stack(x)
+    # FC reduction
+    self.reduction_stack = Sequential(
+      Linear(1728, 1024),
+      LeakyReLU(),
+      Linear(1024, 512),
+      LeakyReLU(),
+      Linear(512, 10),
+    )
+
+    self.composite = Sequential(
+      self.cnn_relu_stack,
+      Flatten(),
+      self.reduction_stack
+    )
+
+  def forward(self, x): return self.composite(x)
