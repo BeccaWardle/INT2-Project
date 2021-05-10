@@ -20,7 +20,7 @@ cont_fname = "model.pth"
 ## Feature: notification service
 SQS = True
 queue = False
-jit = False
+jit = True
 adam = False
 
 ## main code
