@@ -13,52 +13,80 @@ class Network(Module):
     self.__version__ = "2.0"
 
     """
-    Conv2d 3:32 -> LeakyReLU -> Conv2d 32:32 -> LeakyReLU -> Normalise
-    Conv2d 32:128 -> LeakyReLU -> Conv2d 128:128 -> LeakyReLU -> Normalise -> MaxPool2d 4,2
+    Conv2d -> LeakyReLU -> Conv2d -> LeakyReLU -> Normalise
+    Conv2d -> LeakyReLU -> Conv2d  -> LeakyReLU -> Normalise -> MaxPool2d 4,2
       Dropout2d 0.48
-    Conv2d 128:192 -> LeakyReLU -> Normalise -> MaxPool2d 4,2
+    Conv2d -> LeakyReLU -> Normalise -> MaxPool2d 4,2
       Dropout2d 0.48
     
     Flatten to 1D
     
-    Reduction: 1728 -> 1024 -> 512 -> 10
+    Reduction: _ -> 1024 -> 512 -> 10
     """
+
+    k = lambda chan: 3 * (2**chan) # channel multiplier
+    dropout_p = 0.5
 
     # CNN
     self.cnn_relu_stack = Sequential(
-      Conv2d(in_channels=3, out_channels=32, kernel_size=(3,3), stride=(1,1)),
+
+      #1
+      Conv2d(in_channels=k(0), out_channels=k(3), kernel_size=(3,3), stride=(1,1)),
       LeakyReLU(), # no inplace.
 
-      Conv2d(32, 32, (3,3), (1,1)),
+      #2
+      Conv2d(k(3), k(3), (3, 3), (1,1)),
       LeakyReLU(),
 
-      BatchNorm2d(32),
+      BatchNorm2d(k(3)),
 
-      Conv2d(32, 128, (3, 3), (1, 1)), # increase filter size
+      #3
+      Conv2d(k(3), k(5), (3, 3), (1, 1)), # increase filter size
       LeakyReLU(),
 
-      Conv2d(128, 128, (3, 3), (1, 1)),
+      #4
+      Conv2d(k(5), k(5), (3, 3), (1, 1)),
       LeakyReLU(),
 
-      BatchNorm2d(128),
+      BatchNorm2d(k(5)),
 
-      MaxPool2d(4,2), # subsampling, reduces parameter size, increase performance (128 filters)
+      MaxPool2d(2, 2), # subsampling, reduces parameter size, increase performance, halfs the size
 
-      Dropout2d(0.48), # drop out entire filters, p=0.48
+      Dropout2d(dropout_p), # drop out entire filters
 
-      Conv2d(128, 192, (3, 3), (1, 1)),
+      #5
+      Conv2d(k(5), k(6), (3, 3), (1, 1)),
       LeakyReLU(),
 
-      BatchNorm2d(192),
+      BatchNorm2d(k(6)),
 
-      MaxPool2d(4, 2),  # subsampling, reduces parameter size, increase performance (128 filters)
+      # MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
 
-      Dropout2d(0.48),  # drop out entire filters, p=0.48
+      Dropout2d(dropout_p),  # drop out entire filters
+
+      #6
+      Conv2d(k(6), k(6), (3, 3), (1, 1)),
+      LeakyReLU(),
+
+      Dropout2d(dropout_p),  # drop out entire filters
+
+      #7
+      Conv2d(k(6), k(6), (3, 3), (1, 1)),
+      LeakyReLU(),
+      BatchNorm2d(k(6)),
+      #MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
+
+      #8
+      Conv2d(k(6), k(7), (3, 3), (1, 1)),
+      LeakyReLU(),
+      MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
+      Dropout2d(dropout_p),  # drop out entire filters
+
     )
 
     # FC reduction
     self.reduction_stack = Sequential(
-      Linear(1728, 1024),
+      Linear(1536, 1024),
       LeakyReLU(),
       Linear(1024, 512),
       LeakyReLU(),

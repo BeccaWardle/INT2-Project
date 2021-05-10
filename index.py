@@ -10,7 +10,7 @@
 batch_size = 64
 learning_rate = 1e-2
 momentum = 0.9
-epochs = 100
+epochs = 200
 max_consecutive = 25
 
 ## feature: continue training
@@ -238,5 +238,20 @@ for t in range(epochs):
         response = queue.send_message(MessageBody=f"{t},{correct},{max_accuracy}", MessageGroupId="model")
 
 print("Done!")
+
+## check number of parameters
+
+params_accumulator = 0
+
+# https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+for module_name, param in network_model.named_parameters():
+    if not param.requires_grad: continue # ignore untrainable parameters
+
+    n = param.numel()
+    print(f"{module_name}\t{n}")
+
+    params_accumulator += n
+
+print(f"Trainable parameters: {params_accumulator}")
 
 save(0, 0)
