@@ -45,7 +45,7 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR100
 
 
 import network
@@ -72,14 +72,14 @@ transform = transforms.Compose(
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 # load data (download data from UToronto)
-training_data = CIFAR10(
+training_data = CIFAR100(
     root="data",
     train=True,
     download=True,
     transform=transform,
 )
 
-test_data = CIFAR10(
+test_data = CIFAR100(
     root="data",
     train=False,
     download=True,
