@@ -120,8 +120,9 @@ if jit is True:
 # continue training -> load previous model
 if cont:
     print("continuing previous progress.")
-    network_model.load_state_dict(torch.load(cont_fname))
-    network_model.eval()
+    network_model = torch.load(cont_fname)
+    network_model = torch.jit.script(network_model)
+
 
 network_model.to(device)  # send tensors to CUDA cores
 print(network_model)
@@ -189,6 +190,9 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
 
 def save(signum, frame):
     ## save model state
+    torch.save(network_model,
+               f"result/network.{int(script_start)}.{network_model.__version__}.pth")
+
     torch.save(network_model.state_dict(), f"result/model.{int(script_start)}.pth")
 
     # atexit doesn't work
