@@ -60,11 +60,11 @@ class Network(Module):
       Linear(512, 10),
       # softmax (?)
     )
-          ## Conv Layer block 1
+              ## Conv Layer block 1
   
-  def draw(self, y):
-    model = self.cnn_relu_stack
-    make_dot(y.mean(), params=dict(model.named_parameters()))
+  #def draw(self, y):
+   # model = self.cnn_relu_stack
+    #make_dot(y.mean(), params=dict(model.named_parameters()))
 
   def forward(self, x):
     return self.cnn_relu_stack(x)
