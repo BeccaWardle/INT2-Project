@@ -59,7 +59,6 @@ from torchvision.datasets import CIFAR10
 
 import network
 
-
 script_start = time()
 print(f"Started: {datetime.datetime.now()}")
 
@@ -123,7 +122,7 @@ for X, y in test_dataloader:
 
 # %%
 
-network_model = network.Network()
+network_model = network.Lexffe()
 
 if jit is True:
     network_model = torch.jit.script(network_model)
