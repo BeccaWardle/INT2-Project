@@ -53,6 +53,8 @@ class Network(Module):
       #3
       Conv2d(k(3), k(5), (3, 3), (1, 1)), LeakyReLU(), # increase filter size
 
+      Dropout(p=0.35),
+
       #4
       Conv2d(k(5), k(5), (3, 3), (1, 1)), LeakyReLU(),
 
