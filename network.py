@@ -39,57 +39,93 @@ class Lexffe(Module):
     def __init__(self):
         self.name = "Lexffe"
         super(Lexffe, self).__init__()
-        self.__version__ = "1.25.1"
+        # 2.0: redesign entire network
+        self.__version__ = "2.3.2"
 
-        # self.pool = MaxPool2d(2)  # 2*2 max pooling
+        """
+        Conv2d -> LeakyReLU [1] 
+        Conv2d -> LeakyReLU [2]
+        Normalise
+        Conv2d -> LeakyReLU [3]
+        Conv2d  -> LeakyReLU [4]
+        Normalise
+        MaxPool2d 2,2
+        Dropout2d
+        Conv2d -> LeakyReLU [5]
+        Normalise
+        Conv2d  -> LeakyReLU [6]
+        Normalise
+        Conv2d  -> LeakyReLU [7]
+        MaxPool2d 3,2
+        Dropout2d
 
+        Flatten to 1D
+
+        Reduction: _ -> 1024 -> 128 -> 10
+        """
+
+        k = lambda chan: 3 * (2 ** chan)  # channel multiplier
+        filter_dropout_p = 0.48
+        linear_dropout_p = 0.4
+
+        # CNN
         self.cnn_relu_stack = Sequential(
 
-            # Conv Layer block 1 -- feature extraction
-            Conv2d(3, 32, 3, 1),
-            BatchNorm2d(32),
-            LeakyReLU(inplace=True),
-            Conv2d(32, 128, 3, 1), # 64
-            LeakyReLU(inplace=True),
-            MaxPool2d(2, 2),
-            Dropout2d(p=0.25),
+          # 1
+          Conv2d(in_channels=k(0), out_channels=k(3), kernel_size=(3, 3), stride=(1, 1)), LeakyReLU(),  # no inplace.
+          BatchNorm2d(k(3)),
 
-            # Conv Layer block 2
-            Conv2d(128, 128, 3, 1),
-            BatchNorm2d(128),
-            LeakyReLU(inplace=True),
-            Dropout(p=0.4),
-            Conv2d(128, 128, 3, 1),
-            LeakyReLU(inplace=True),
-            MaxPool2d(3, 2),
-            Dropout2d(p=0.35),
+          # 2
+          Conv2d(k(3), k(5), (3, 3), (1, 1)), LeakyReLU(),
+          BatchNorm2d(k(5)),
 
-            # Conv Layer block 3
-            # Conv2d(128, 256, 3, 1),
-            # BatchNorm2d(256),
-            # LeakyReLU(inplace=True),
-            # Dropout(p=0.3),
-            Conv2d(128, 256, 3, 1),
-            BatchNorm2d(256),
-            LeakyReLU(inplace=True),
-            MaxPool2d(4, 2),
-            Dropout2d(p=0.375),
+          # 3
+          Conv2d(k(5), k(5), (3, 3), (1, 1)), LeakyReLU(),  # increase filter size
+          BatchNorm2d(k(5)),
 
-            Flatten(),
+          Dropout(p=0.35),
 
-            Dropout(p=0.2),
-            Linear(4096, 1024),
-            LeakyReLU(inplace=True),
-            Dropout(p=0.375),
-            Linear(1024, 128),
-            LeakyReLU(inplace=True),
-            Dropout(p=0.25),
-            Linear(128, 10),
-            # softmax (?)
+          # 4
+          Conv2d(k(5), k(6), (3, 3), (1, 1)), LeakyReLU(),
+          BatchNorm2d(k(6)),
+          MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance, halfs the size
+
+          Dropout2d(filter_dropout_p),  # drop out entire filters
+
+          # 5
+          Conv2d(k(6), k(6), (3, 3), (1, 1)), LeakyReLU(),
+          BatchNorm2d(k(6)),
+          # MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
+
+          # 6
+          Conv2d(k(6), k(7), (3, 3), (1, 1)), LeakyReLU(),
+          BatchNorm2d(k(7)),
+          # MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
+
+          # 7
+          Conv2d(k(7), k(7), (3, 3), (1, 1)), LeakyReLU(),
+          MaxPool2d(3, 2),  # subsampling, reduces parameter size, increase performance
+          Dropout2d(filter_dropout_p),  # drop out entire filters
+
         )
 
-    def forward(self, x):
-        return self.cnn_relu_stack(x)
+        # FC reduction
+        self.reduction_stack = Sequential(
+          Linear(1536, 1024),
+          LeakyReLU(),
+          Dropout(linear_dropout_p),
+          Linear(1024, 128),
+          LeakyReLU(),
+          Linear(128, 10),
+        )
+
+        self.composite = Sequential(
+          self.cnn_relu_stack,
+          Flatten(),
+          self.reduction_stack
+        )
+
+    def forward(self, x): return self.composite(x)
 
 
 class Becca(Module):

@@ -1,6 +1,8 @@
 .vscode/
 data/
 __pycache__/
-model.pth
+*.pth
 .idea/
 results/networks/
+
+tensorboard/
