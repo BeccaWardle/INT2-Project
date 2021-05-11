@@ -10,7 +10,7 @@ class Network(Module):
     super(Network, self).__init__()
 
     # 2.0: redesign entire network
-    self.__version__ = "2.2"
+    self.__version__ = "2.3"
 
     """
     Conv2d -> LeakyReLU [1] 
@@ -23,8 +23,7 @@ class Network(Module):
     Dropout2d
     Conv2d -> LeakyReLU [5]
     Normalise
-    Conv2d -> LeakyReLU [6]
-    Conv2d  -> LeakyReLU [7]
+    Conv2d  -> LeakyReLU [6]
     Normalise
     Conv2d  -> LeakyReLU [7]
     MaxPool2d 3,2
@@ -44,42 +43,36 @@ class Network(Module):
 
       #1
       Conv2d(in_channels=k(0), out_channels=k(3), kernel_size=(3,3), stride=(1,1)), LeakyReLU(), # no inplace.
-
-      #2
-      Conv2d(k(3), k(3), (3, 3), (1,1)), LeakyReLU(),
-
       BatchNorm2d(k(3)),
 
+      #2
+      Conv2d(k(3), k(5), (3, 3), (1,1)), LeakyReLU(),
+      BatchNorm2d(k(5)),
+
       #3
-      Conv2d(k(3), k(5), (3, 3), (1, 1)), LeakyReLU(), # increase filter size
+      Conv2d(k(5), k(5), (3, 3), (1, 1)), LeakyReLU(), # increase filter size
+      BatchNorm2d(k(6)),
 
       Dropout(p=0.35),
 
       #4
-      Conv2d(k(5), k(5), (3, 3), (1, 1)), LeakyReLU(),
-
-      BatchNorm2d(k(5)),
-
+      Conv2d(k(5), k(6), (3, 3), (1, 1)), LeakyReLU(),
+      BatchNorm2d(k(6)),
       MaxPool2d(2, 2), # subsampling, reduces parameter size, increase performance, halfs the size
 
       Dropout2d(filter_dropout_p), # drop out entire filters
 
       #5
-      Conv2d(k(5), k(6), (3, 3), (1, 1)), LeakyReLU(),
-
+      Conv2d(k(6), k(6), (3, 3), (1, 1)), LeakyReLU(),
       BatchNorm2d(k(6)),
-
       # MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
 
       #6
-      Conv2d(k(6), k(6), (3, 3), (1, 1)), LeakyReLU(),
-
-      #7
       Conv2d(k(6), k(7), (3, 3), (1, 1)), LeakyReLU(),
       BatchNorm2d(k(7)),
       #MaxPool2d(2, 2),  # subsampling, reduces parameter size, increase performance
 
-      #8
+      #7
       Conv2d(k(7), k(7), (3, 3), (1, 1)), LeakyReLU(),
       MaxPool2d(3, 2),  # subsampling, reduces parameter size, increase performance
       Dropout2d(filter_dropout_p),  # drop out entire filters

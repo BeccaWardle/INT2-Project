@@ -1,0 +1,10 @@
+Epoch 90/200
+-------------------------------
+Loss: 0.038673 [48000/50000]
+time since start: 1669.68s, time since iteration start: 16.09s
+
+Accuracy: 82.87%, Avg loss: 0.012584
+
+no improvement: 25/25, max accuracy: 83.15%
+
+network.1620686983.2.2.pth

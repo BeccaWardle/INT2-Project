@@ -227,6 +227,7 @@ def save(signum, frame):
 
         dataiter = iter(train_dataloader)
         images, labels = next(dataiter)
+        images = images.to(device)
 
         writer.add_graph(network_model, images)
         writer.close()
