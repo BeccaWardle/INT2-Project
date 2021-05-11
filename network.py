@@ -10,7 +10,7 @@ class Network(Module):
     super(Network, self).__init__()
 
     # 2.0: redesign entire network
-    self.__version__ = "2.3.1"
+    self.__version__ = "2.3.2"
 
     """
     Conv2d -> LeakyReLU [1] 
@@ -31,7 +31,7 @@ class Network(Module):
     
     Flatten to 1D
     
-    Reduction: _ -> 1024 -> 512 -> 10
+    Reduction: _ -> 1024 -> 128 -> 10
     """
 
     k = lambda chan: 3 * (2**chan) # channel multiplier
@@ -81,12 +81,12 @@ class Network(Module):
 
     # FC reduction
     self.reduction_stack = Sequential(
-      Linear(384, 256),
+      Linear(1536, 1024),
       LeakyReLU(),
       Dropout(linear_dropout_p),
-      Linear(256, 32),
+      Linear(1024, 128),
       LeakyReLU(),
-      Linear(32, 10),
+      Linear(128, 10),
     )
 
     self.composite = Sequential(
