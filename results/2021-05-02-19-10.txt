@@ -1,0 +1,36 @@
+Network(
+  (cnn_relu_stack): Sequential(
+    (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1))
+    (1): ReLU()
+    (2): Conv2d(32, 128, kernel_size=(3, 3), stride=(1, 1))
+    (3): ReLU()
+    (4): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (5): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (6): Conv2d(128, 192, kernel_size=(3, 3), stride=(1, 1))
+    (7): ReLU()
+    (8): Dropout2d(p=0.025, inplace=False)
+    (9): Conv2d(192, 256, kernel_size=(3, 3), stride=(1, 1))
+    (10): ReLU()
+    (11): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    (12): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (13): Conv2d(256, 384, kernel_size=(3, 3), stride=(1, 1))
+    (14): ReLU()
+    (15): Dropout2d(p=0.03, inplace=False)
+    (16): Conv2d(384, 512, kernel_size=(3, 3), stride=(1, 1))
+    (17): ReLU()
+    (18): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+    (19): Flatten(start_dim=1, end_dim=-1)
+    (20): Linear(in_features=512, out_features=128, bias=True)
+    (21): ReLU()
+    (22): Linear(in_features=128, out_features=64, bias=True)
+    (23): ReLU()
+    (24): Linear(in_features=64, out_features=10, bias=True)
+  )
+)
+
+Epoch:300, stopped at 119, no improvement over 25 epoch
+Learning rate: 0.001
+Result: 71.60% max
+Running time: 11831.43s
+
+1619979031

@@ -1,0 +1,34 @@
+self.cnn_relu_stack = Sequential(
+  Conv2d(3, 32, (3,3)),  # 3 in-channel, 16 out-channel, number of kernel
+  ReLU(),
+  Dropout2d(0.01),
+  MaxPool2d(2),
+  Conv2d(32, 128, (3,3)),
+  ReLU(),
+  MaxPool2d(2),
+  BatchNorm2d(128),
+  Conv2d(128, 384, (3,3)),
+  ReLU(),
+  # MaxPool2d(2),
+  Dropout2d(0.025),
+  Conv2d(384, 448, (3,3)),
+  ReLU(),
+  Dropout2d(0.025),
+  BatchNorm2d(448),
+  Flatten(),
+  Linear(1792, 1024),
+  ReLU(),
+  Linear(1024, 384),
+  ReLU(),
+  Linear(384, 96),
+  ReLU(),
+  Linear(96, 10),  # 10 classes, final output
+)
+
+Epoch:300, stopped at 142, no improvement over 25 epoch
+Learning rate: 0.001
+Result: 69.84% max
+Running time: 6664.67s
+
+model.1619824192.pth
+1619824192.plot.csv
