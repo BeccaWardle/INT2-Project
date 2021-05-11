@@ -10,7 +10,7 @@ class Network(Module):
     super(Network, self).__init__()
 
     # 2.0: redesign entire network
-    self.__version__ = "2.3"
+    self.__version__ = "2.3.1"
 
     """
     Conv2d -> LeakyReLU [1] 
@@ -51,7 +51,7 @@ class Network(Module):
 
       #3
       Conv2d(k(5), k(5), (3, 3), (1, 1)), LeakyReLU(), # increase filter size
-      BatchNorm2d(k(6)),
+      BatchNorm2d(k(5)),
 
       Dropout(p=0.35),
 
