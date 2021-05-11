@@ -6,7 +6,7 @@ import cv2 as cv
 from cv2 import cv2
 import argparse
 from torchvision import models, transforms
-import new_network
+import final_network
 
 from torchvision import utils
 
@@ -14,7 +14,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('-i', '--image', required=True,help='path to image')
 args = vars(ap.parse_args())
 
-model = new_network.Net()
+model = final_network.Net()
 model_weights = []     # we will save the conv layer weights in this list
 conv_layers = []       # we will save the conv layers in this list
 #get all the model children as list
@@ -46,7 +46,6 @@ plt.imshow(img)
 # define the transforms
 transform = transforms.Compose([
     transforms.ToPILImage(),
-    transforms.Resize(64),
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 img = np.array(img)
@@ -68,7 +67,7 @@ outputs = results
 # visualize 64 features from each layer 
 # (although there are more feature maps in the upper layers)
 for num_layer in range(len(outputs)):
-    plt.figure(figsize=(30, 30))
+    plt.figure(figsize=(32, 32))
     layer_viz = outputs[num_layer][0, :, :, :]
     layer_viz = layer_viz.data
     #print(layer_viz.size())
