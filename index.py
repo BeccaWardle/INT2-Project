@@ -14,11 +14,10 @@ epochs = 200
 max_consecutive = 25
 
 ## feature: continue training
-cont = False
-cont_fname = "model.pth"
+cont = ""
 
 ## Feature: notification service
-SQS = True
+SQS = False
 queue = False # SQS
 
 ## Feature: torch-related configs
@@ -124,13 +123,13 @@ for X, y in test_dataloader:
 
 network_model = network.Lexffe()
 
-if jit is True:
+if jit:
     network_model = torch.jit.script(network_model)
 
 # continue training -> load previous model
 if cont:
     print("continuing previous progress.")
-    network_model = torch.load(cont_fname)
+    network_model = torch.load(cont)
     network_model = torch.jit.script(network_model)
 
 
@@ -147,6 +146,9 @@ op = torch.optim.Adam(network_model.parameters()) if adam is True else \
     torch.optim.SGD(network_model.parameters(), lr=learning_rate, momentum=momentum)
 sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min')
 
+
+epoch_progress = []
+failed_write = False
 # training
 
 
@@ -198,6 +200,22 @@ def test_loop(dataloader, model: nn.Module, loss_fn):
     return correct, test_loss
 
 
+def save_csv(t, correct):
+    file_name = f"results/{int(script_start)}-{network_model.name}_{network_model.__version__}.csv"
+    global failed_write
+    global epoch_progress
+    try:
+        with open(file_name, "a") as f:
+            if failed_write:
+                for line in epoch_progress:
+                    f.write(f"{line[0]}.{line[1]}\n")
+                failed_write = False
+            else:
+                f.write(f"{t},{correct}\n")
+    except PermissionError:
+        epoch_progress.append((t, correct))
+        failed_write = True
+
 def save(signum, frame):
     ## save model state
 
@@ -205,20 +223,13 @@ def save(signum, frame):
     version = network.Network().__version__
 
     torch.save(network_model,
-               f"result/network.{timestamp}.{version}.pth")
+               f"results/networks/network.{timestamp}.{version}.pth")
 
-    torch.save(network_model.state_dict(), f"result/model.{timestamp}.pth")
-
-    # atexit doesn't work
-    with open(f"result/{timestamp}.plot.csv", 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(epoch_accuracy_pair)
-        f.close()
+    torch.save(network_model.state_dict(), f"results/networks/model.{timestamp}.pth")
 
     # tensorboard subroutine
 
     if TBoard is True:
-
         tensorboard_log = f"tensorboard/model_{timestamp}_{version}"
 
         network_model.eval()
@@ -242,12 +253,14 @@ consecutive = 0
 ## ------ main loop
 
 for t in range(epochs):
-    print(f"Epoch {t + 1}/{epochs}\n-------------------------------")
+    print(f"Epoch {t + 1}/{epochs}, Learning rate: {optimiser.param_groups[0]['lr']}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, op)
     correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
     sched.step(loss)
 
-    epoch_accuracy_pair.append((t, correct))
+    save_csv(t, correct)
+
+    # epoch_accuracy_pair.append((t, correct))
 
     if correct > max_accuracy:
         consecutive = 0  # reset counter
