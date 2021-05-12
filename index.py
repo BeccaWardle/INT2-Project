@@ -202,7 +202,7 @@ def save(signum, frame):
     ## save model state
 
     timestamp = int(script_start)
-    version = network.Network().__version__
+    version = network.Lexffe().__version__
 
     torch.save(network_model,
                f"result/network.{timestamp}.{version}.pth")
