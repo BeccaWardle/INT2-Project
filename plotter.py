@@ -18,6 +18,7 @@ fig, ax = plt.subplots()
 max_acc = 0
 max_axi = 0
 for i, data in enumerate(dataframes):
+    print(line_names[i])
     max_axi = len(data[:, 0]) if len(data[:, 0]) > max_axi else max_axi
     max_acc = max(data[:, 1]) if max(data[:, 1]) > max_acc else max_acc
     # if i == len(dataframes) - 1:
