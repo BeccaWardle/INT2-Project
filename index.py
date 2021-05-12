@@ -45,7 +45,6 @@ if TBoard is True:
 # %%
 # Imports
 
-import csv
 import datetime
 import signal
 from time import time
@@ -144,7 +143,7 @@ print(network_model)
 cross_entropy_loss = nn.CrossEntropyLoss()
 op = torch.optim.Adam(network_model.parameters()) if adam is True else \
     torch.optim.SGD(network_model.parameters(), lr=learning_rate, momentum=momentum)
-sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min')
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min', patience=8)
 
 
 epoch_progress = []
@@ -216,21 +215,20 @@ def save_csv(t, correct):
         epoch_progress.append((t, correct))
         failed_write = True
 
+
 def save(signum, frame):
-    ## save model state
+    # save model state
 
     timestamp = int(script_start)
-    version = network.Network().__version__
 
-    torch.save(network_model,
-               f"results/networks/network.{timestamp}.{version}.pth")
+    torch.save(network_model, f"results/networks/{timestamp}-{network_model.name}-{network_model.__version__}.pth")
 
-    torch.save(network_model.state_dict(), f"results/networks/model.{timestamp}.pth")
+    torch.save(network_model.state_dict(), f"results/networks/{timestamp}-{network_model.name}-{network_model.__version__}.pth")
 
     # tensorboard subroutine
 
     if TBoard is True:
-        tensorboard_log = f"tensorboard/model_{timestamp}_{version}"
+        tensorboard_log = f"tensorboard/{timestamp}-{network_model.name}-{network_model.__version__}"
 
         network_model.eval()
         writer = SummaryWriter(tensorboard_log)
@@ -250,10 +248,10 @@ signal.signal(signal.SIGINT, save)
 max_accuracy = 0
 consecutive = 0
 
-## ------ main loop
+# ------ main loop
 
 for t in range(epochs):
-    print(f"Epoch {t + 1}/{epochs}, Learning rate: {optimiser.param_groups[0]['lr']}\n-------------------------------")
+    print(f"Epoch {t + 1}/{epochs}, Learning rate: {op.param_groups[0]['lr']}\n-------------------------------")
     train_loop(train_dataloader, network_model, cross_entropy_loss, op)
     correct, loss = test_loop(test_dataloader, network_model, cross_entropy_loss)
     sched.step(loss)
@@ -280,7 +278,7 @@ for t in range(epochs):
 
 print("Done!")
 
-## check number of parameters
+# check number of parameters
 
 params_accumulator = 0
 
