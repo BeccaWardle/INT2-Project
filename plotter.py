@@ -46,5 +46,5 @@ for i, data in enumerate(dataframes):
 # print(f"max_acc: {max_acc}")
 # ax.annotate(str(max_acc), xy=(0, max_acc+0.01))
 ax.set(xlabel="epoch", ylabel="accuracy")
-plt.legend()
+# plt.legend()
 plt.show()
