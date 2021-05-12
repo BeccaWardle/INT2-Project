@@ -10,8 +10,8 @@
 batch_size = 64
 learning_rate = 1e-2
 momentum = 0.9
-epochs = 200
-max_consecutive = 25
+epochs = 2000
+max_consecutive = 50
 
 ## feature: continue training
 cont = ""
@@ -143,7 +143,7 @@ print(network_model)
 cross_entropy_loss = nn.CrossEntropyLoss()
 op = torch.optim.Adam(network_model.parameters()) if adam is True else \
     torch.optim.SGD(network_model.parameters(), lr=learning_rate, momentum=momentum)
-sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min', patience=8)
+sched = torch.optim.lr_scheduler.ReduceLROnPlateau(op, 'min', patience=12)
 
 
 epoch_progress = []
