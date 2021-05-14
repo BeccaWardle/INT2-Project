@@ -28,23 +28,11 @@ for i, data in enumerate(dataframes):
     else:
         ax.plot(data[:, 0], data[:, 1], label=str(line_names[i]))
 
+ax.plot(max_acc, '-', label="max accuracy")
+ax.axhline(max_acc, ls='--')
+print(f"max_acc: {max_acc}")
+ax.annotate(str(max_acc), xy=(0, max_acc+0.01))
 
-    # if 1620476990 > int(line_names[i][:10]):
-        # print(f"rubbish file: {line_names[i]}")
-        # if max(data[:, 0]) > 100:
-            # ax.plot(data[:100, 0], data[:100, 1], color="r")
-        # else:
-            # ax.plot(data[:, 0], data[:, 1], color="r")
-    # else:
-        # if max(data[:, 0]) > 100:
-            # ax.plot(data[:100, 0], data[:100, 1], color="r")
-        # else:
-            # ax.plot(data[:, 0], data[:, 1], color="r")
-
-# ax.plot(max_acc, range(max_axi), '-', label="max accuracy")
-# ax.axhline(max_acc, ls='--')
-# print(f"max_acc: {max_acc}")
-# ax.annotate(str(max_acc), xy=(0, max_acc+0.01))
 ax.set(xlabel="epoch", ylabel="accuracy")
 # plt.legend()
 plt.show()
